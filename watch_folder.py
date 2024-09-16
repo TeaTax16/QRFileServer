@@ -5,9 +5,9 @@ import subprocess
 import os
 
 # Define paths to input folder, output folder, and 3D Slicer executable
-input_folder = r'C:\Users\Takrim XARlabs\Documents\GitHub Projects\SlicerSegmentator\Input'
-output_folder = r'C:\Users\Takrim XARlabs\Documents\GitHub Projects\SlicerSegmentator\Output'
-slicer_path = r'C:\Users\Takrim XARlabs\AppData\Local\slicer.org\Slicer 5.6.2\Slicer.exe'
+input_folder = r'directory/to/input/folder'
+output_folder = r'directory/to/output/folder'
+slicer_path = r'directory/to/Slicer.exe'
 
 # Custom event handler to check for changes in file directories
 class NewFileHandler(FileSystemEventHandler):
