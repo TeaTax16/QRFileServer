@@ -1,4 +1,4 @@
-# SlicerSegmentator
+# AutomatedSlicerSegmentator
  This project provides a Python script that monitors a specified folder for new medical imaging files, processes them using 3D Slicers, Total Segmentator extension, and exports the resulting segmentation to a .gltf file using the OpenAnatomy Export extension. This output files are saved in a designated output folder.
 
 ## Features
