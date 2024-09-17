@@ -22,16 +22,16 @@ class NewFileHandler(FileSystemEventHandler):
 
             # Handle files from the input folder
             if self.folder_type == 'input':
-                print(f'New file detected in input folder.\nSegmenting...\n')
+                print(f'New file detected in input folder.\nSegmenting...')
                 process_file(filepath)  # Call function to process the new file
 
             # Handle files from the output folder
             elif self.folder_type == 'output':
-                print(f'New segmentation added to Output folder.')
+                print(f'New segmentation added to Output folder.\n')
 
 # Function to run Slicer with the input file and output directory
 def process_file(filepath):
-    slicer_script = os.path.abspath(r'C:\Users\Takrim XARlabs\Documents\GitHub Projects\SlicerSegmentator\slicer_processing.py')
+    slicer_script = os.path.abspath(r'.\slicer_processing.py')
     subprocess.run([slicer_path, '--no-main-window', '--python-script', slicer_script, filepath, output_folder])
 
 if __name__ == '__main__':
@@ -49,7 +49,7 @@ if __name__ == '__main__':
 
     # Start the observer thread
     observer.start()
-    print(f'Watching folders:\nInput folder: {input_folder},\nOutput folder: {output_folder},\nPress Ctrl+C to stop watching.\n')
+    print(f'\nWatching folders:\nInput: {input_folder},\nOutput: {output_folder},\n\nPress Ctrl+C to stop watching.\n')
 
     try:
         # Keep the script running to monitor events
