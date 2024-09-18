@@ -9,19 +9,22 @@ def main():
     input_filepath = sys.argv[1]
     output_folder = sys.argv[2]
 
+    # Get base file name from the input file (without the extension)
+    input_filename = os.path.basename(input_filepath)
+    base_filename, _ = os.path.splitext(input_filename)
+
     # Load the input file
-    print(f'Loading file: {input_filepath}')
     loadedNode = slicer.util.loadVolume(input_filepath)
 
     # Check if the volume was loaded
     if not loadedNode:
-        print('Failed to load volume.')
         sys.exit(1)
 
     # Run Total Segmentator
-    print('Running Total Segmentator...')
     # Create a new segmentation node in Slicer's MRML scene for output
     segmentVolumeNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLSegmentationNode")
+    # Set the name of the segmentation node to the base filename
+    segmentVolumeNode.SetName(base_filename)
 
     # Initialise TotalSegmentatorLogic to process the segmentation
     totalSegmentatorLogic = TotalSegmentatorLogic()
@@ -33,7 +36,6 @@ def main():
     )
 
     # Export to .gltf 
-    print('Exporting to .gltf...')
     # Initialize the logic
     OAExportLogic = OpenAnatomyExportLogic()
     # Get tge subject hierarchy node
@@ -48,7 +50,6 @@ def main():
     
 )
 
-    print(f'Export complete. Files saved in: {output_folder}')
     slicer.mrmlScene.Clear(0)
     sys.exit(0)
 

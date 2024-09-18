@@ -12,6 +12,7 @@ input_folder = r'directory/to/input/folder'
 output_folder = r'directory/to/output/folder'
 slicer_path = r'directory/to/Slicer.exe'
 
+
 # Queue to store files to be processed
 file_queue = queue.Queue()
 new_files_list = []
@@ -56,9 +57,10 @@ def process_queue():
         # Process the file
         process_file(filepath)
         
-        # After processing, reset currently processing file
+        # After processing, reset currently processing file and delete the input file
         with status_lock:
             currently_processing=None
+            os.remove(filepath)
             
         # Indicate the task is done
         file_queue.task_done()
