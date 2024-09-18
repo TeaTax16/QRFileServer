@@ -5,6 +5,7 @@ import subprocess
 import os
 import threading
 import queue
+import sys
 
 # Define paths to input folder, output folder, and 3D Slicer executable
 input_folder = r'directory/to/input/folder'
@@ -14,7 +15,8 @@ slicer_path = r'directory/to/Slicer.exe'
 # Queue to store files to be processed
 file_queue = queue.Queue()
 new_files_list = []
-new_files_lock = threading.Lock()
+currently_processing = None
+status_lock = threading.Lock() # lock to synchronise status updates
 
 # Custom event handler to check for changes in file directories
 class NewFileHandler(FileSystemEventHandler):
@@ -31,10 +33,8 @@ class NewFileHandler(FileSystemEventHandler):
             # Handle files from the input folder
             if self.folder_type == 'input':
                 file_queue.put(filepath)
-                with new_files_lock:
+                with status_lock:
                     new_files_list.append(filename)
-                    print(f'New Files added: {", ".join(new_files_list)}')
-
 
 # Function to run Slicer with the input file and output directory
 def process_file(filepath):
@@ -43,30 +43,54 @@ def process_file(filepath):
 
 # Thread function to process files from the queue
 def process_queue():
+    global currently_processing
     while True:
-        # Retrieve new file in the queue
+        # Retrieve next file in the queue
         filepath = file_queue.get()
         filename = os.path.basename(filepath)
-
-        # Update number of files to process
-        queue_size = file_queue.qsize()
-        #Print currently processing file and the number of files left
-        print(f'Currently processing {filename}\nFiles left to process: {queue_size}')
-
-        # Process the file and output once completed
-        process_file(filepath)
-        print(f'{filename} has been segmented.')
-        
-        # Remove file from queue list
-        with new_files_lock:
+        # Update currently processing file
+        with status_lock:
+            currently_processing = filename
             if filename in new_files_list:
                 new_files_list.remove(filename)
-        # Indicate task is done
+        # Process the file
+        process_file(filepath)
+        
+        # After processing, reset currently processing file
+        with status_lock:
+            currently_processing=None
+            
+        # Indicate the task is done
         file_queue.task_done()
 
+# Function to update console window output
+def update_console_status():
+    while True:
+        with status_lock:
+            # Clear the console 
+            os.system('cls' if os.name =='nt' else 'clear')
+
+            print(f"Upload new files to: {input_folder}\nPress Ctrl+C to stop program.\n-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+
+            # Print new files added
+            if new_files_list:
+                print(f'New files added: {", ".join(new_files_list)}')
+            else:
+                print("Waiting for new files...")
+
+            # Print currently processing file
+            if currently_processing:
+                print(f'Currently Processing: {currently_processing}')
+                # Print number of files in the queue
+                queue_size = file_queue.qsize()
+                print(f"Files in the queue: {queue_size}")
+            else:
+                print("")
+            
+        time.sleep(1)
 
 if __name__ == '__main__':
-    # Initialise the event handler for both input and output folders
+    # Initialise the event handler for input folder
     input_event_handler = NewFileHandler('input')
 
     # Initialise the observer
@@ -75,14 +99,16 @@ if __name__ == '__main__':
     # Schedule the observer to watch the input folder for new files
     observer.schedule(input_event_handler, input_folder, recursive=False)
 
-
     # Start the observer thread
     observer.start()
-    print(f'\nWatching folders:\nInput: {input_folder}\n\nPress Ctrl+C to stop watching.\n')
 
     #Start the processing thread
     processing_thread = threading.Thread(target=process_queue, daemon=True)
     processing_thread.start()
+
+    # Start the console  update thread
+    console_thread = threading.Thread(target=update_console_status, daemon=True)
+    console_thread.start()
 
     try:
         # Keep the script running to monitor events
