@@ -12,7 +12,6 @@ input_folder = r'directory/to/input/folder'
 output_folder = r'directory/to/output/folder'
 slicer_path = r'directory/to/Slicer.exe'
 
-
 # Queue to store files to be processed
 file_queue = queue.Queue()
 new_files_list = []
