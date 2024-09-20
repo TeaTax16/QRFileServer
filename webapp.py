@@ -7,13 +7,9 @@ import subprocess
 import time
 
 # Paths to the input and output folders and the Slicer executable
-# input_folder = r'directory/to/input/folder'
-# output_folder = r'directory/to/output/folder'
-# slicer_path = r'directory/to/Slicer.exe'
-
-input_folder = r'C:\Users\Takrim XARlabs\Documents\Auto Segment Test\Input'
-output_folder = r'C:\Users\Takrim XARlabs\Documents\Auto Segment Test\Output'
-slicer_path = r'C:\Users\Takrim XARlabs\AppData\Local\slicer.org\Slicer 5.6.2\Slicer.exe'
+input_folder = r'directory/to/input/folder'
+output_folder = r'directory/to/output/folder'
+slicer_path = r'directory/to/Slicer.exe'
 
 # Ensure the input and output folders exist
 os.makedirs(input_folder, exist_ok=True)
