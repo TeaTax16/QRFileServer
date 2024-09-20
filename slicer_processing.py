@@ -46,7 +46,7 @@ def main():
     OAExportLogic.exportModel(
     inputItem=inputItem,    # Segmentation Item to convert
     outputFolder=output_folder, # Output folder to export to
-    reductionFactor = 0.1,
+    reductionFactor = 0.01, # reduce effect of reduction factor on the .gltf model
     outputFormat='glTF' # Format to export to
     
 )
