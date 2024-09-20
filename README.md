@@ -74,7 +74,8 @@ The Flask app will start running on ```http://localhost:8080/```.
 
 Supported file types: ```.nrrd```, ```.nii```, ```.nii.gz```, ```.dcm```, ```.dicom```.
 
-![Upload Images]({F6070AD7-90B7-48B7-92DA-59062A31E77D}.png)
+![Upload Files](https://github.com/user-attachments/assets/214fdb30-4835-4712-8e4a-712a02d6efa5)
+
 
 #### **Monitoring Processing Status**
 The same tab will show real-time status updates, including:
@@ -82,7 +83,9 @@ The same tab will show real-time status updates, including:
 - Currently processing file.
 - Number of files in the queue.
 
-![Processing Status]({6C77C3CE-1F81-4EC8-8934-5A1569B8793D}.png)
+![Processing Status](https://github.com/user-attachments/assets/aaa6028c-2823-40ac-9d08-39a5851c88fd)
+
+
 
 #### **Accessing Processed Files**
 - **List Files**: Use the ```Open JSON List``` button on the page or navigate to ```http://localhost:8080/files``` to view a JSON list of processed files in a new file.
