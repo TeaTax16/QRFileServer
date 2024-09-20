@@ -105,79 +105,111 @@ def upload_file():
 
     # Adding Bootstrap for styling and enhancing the layout
     return render_template_string('''
-        <!doctype html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-            <title>AutomatedSlicerSegmentator</title>
-            <!-- Bootstrap CSS -->
-            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-        </head>
-        <body class="bg-light">
-            <div class="container">
-                <div class="py-5 text-center">
-                    <h1>Upload New Images</h1>
-                    {% if success %}
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        Files uploaded successfully!
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                    {% endif %}
-                    {% if error_message %}
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        {{ error_message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                    {% endif %}
+    <!doctype html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>AutomatedSlicerSegmentator</title>
+        <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-light">
+        <div class="container">
+            <div class="py-5 text-center">
+                <h1>Automated Slicer Segmentator </h1>
+                {% if success %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    Files uploaded successfully!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
-
-                <!-- File upload form -->
-                <div class="card p-4 mb-4">
-                    <form method=post enctype=multipart/form-data class="mb-3">
-                        <div class="mb-3">
-                            <label for="fileInput" class="form-label"><strong>Choose files to upload</strong> (multiple allowed):</label>
-                            <input type="file" name="file[]" id="fileInput" class="form-control" multiple accept=".nrrd,.nii,.nii.gz,.dcm,.dicom">
-                        </div>
-                        <!-- Centering the button -->
-                        <div class="text-center">
-                            <button type="submit" class="btn btn-primary">Upload</button>
-                        </div>
-                    </form>
+                {% endif %}
+                {% if error_message %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ error_message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
+                {% endif %}
+            </div>
 
-                <hr>
-
-                <div class="card p-4">
-                    <h2>Processing Status</h2>
-                    <ul class="list-group">
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <strong>Queue:</strong>
-                            <span>{{ new_files }}</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <strong>Processing:</strong>
-                            <span>{{ current_file }}</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <strong>Files Left:</strong>
-                            <span>{{ queue_size }}</span>
-                        </li>
-                    </ul>
-
-                    <div class="text-center mt-4">
-                        <!-- Add the Refresh Button at the bottom of the processing status -->
-                        <a href="http://localhost:8080/upload" class="btn btn-secondary">Refresh Page</a>
-                        <!-- Add the button to open the JSON list in a new tab -->
-                        <a href="http://localhost:8080/list" class="btn btn-info" target="_blank">Open JSON List</a>
+            <!-- File upload form -->
+            <div class="card p-4 mb-4">
+                <form method="post" enctype="multipart/form-data" class="mb-3">
+                    <div class="mb-3">
+                        <label for="fileInput" class="form-label"><strong>Choose files to upload</strong> (multiple allowed):</label>
+                        <input type="file" name="file[]" id="fileInput" class="form-control" multiple accept=".nrrd,.nii,.nii.gz,.dcm,.dicom">
                     </div>
-                </div>
+                    <!-- Centering the button -->
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </div>
+                </form>
+            </div>
 
-            <!-- Bootstrap JS and dependencies -->
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-        </body>
-        </html>
-        ''', success=request.args.get('success'), error_message=error_message, new_files=new_files, current_file=current_file, queue_size=queue_size)
+            <hr>
+
+            <div class="card p-4">
+                <h2>Processing Status</h2>
+                <ul class="list-group">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Queue:</strong>
+                        <span id="new_files">{{ new_files }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Processing:</strong>
+                        <span id="current_file">{{ current_file }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Files Left:</strong>
+                        <span id="queue_size">{{ queue_size }}</span>
+                    </li>
+                </ul>
+
+                <div class="text-center mt-4">
+                    <!-- Add the Refresh Button at the bottom of the processing status -->
+                    <a href="/upload" class="btn btn-secondary">Refresh Page</a>
+                    <!-- Add the button to open the JSON list in a new tab -->
+                    <a href="/list" class="btn btn-info" target="_blank">Open JSON List</a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Bootstrap JS and dependencies -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            function updateStatus() {
+                fetch('/status')
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('new_files').innerText = data.new_files;
+                        document.getElementById('current_file').innerText = data.current_file;
+                        document.getElementById('queue_size').innerText = data.queue_size;
+                    })
+                    .catch(error => console.error('Error fetching status:', error));
+            }
+
+            // Update status every 5 seconds
+            setInterval(updateStatus, 5000);
+            // Update status on page load
+            updateStatus();
+        </script>
+    </body>
+    </html>
+''', success=request.args.get('success'), error_message=error_message, new_files=new_files, current_file=current_file, queue_size=queue_size)
+
+# App route to provide status updates in JSON format
+@app.route('/status')
+def status():
+    with status_lock:
+        new_files = ', '.join(new_files_list) if new_files_list else 'Waiting for new files...'
+        current_file = currently_processing if currently_processing else 'None'
+        queue_size = file_queue.qsize()
+    return jsonify({
+        'new_files': new_files,
+        'current_file': current_file,
+        'queue_size': queue_size
+    })
 
 # App route to list all files in the server as a JSON
 @app.route('/list', methods=['GET'])
