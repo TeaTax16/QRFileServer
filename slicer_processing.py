@@ -32,7 +32,7 @@ def main():
         inputVolume=loadedNode, # Input volume to be segmented
         outputSegmentation=segmentVolumeNode,   # Output Segmentation Node
         task='total',   # Segmentation task
-        fast=True,  # Detail of the segmentation task
+        fast=False,  # Detail of the segmentation task
     )
 
     # Export to .gltf 
@@ -46,6 +46,7 @@ def main():
     OAExportLogic.exportModel(
     inputItem=inputItem,    # Segmentation Item to convert
     outputFolder=output_folder, # Output folder to export to
+    reductionFactor = 0.1,
     outputFormat='glTF' # Format to export to
     
 )
