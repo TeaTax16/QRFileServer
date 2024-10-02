@@ -4,6 +4,7 @@ import json  # Importing json module for handling JSON operations
 import slicer  # type: ignore
 from TotalSegmentator import TotalSegmentatorLogic  # type: ignore
 from OpenAnatomyExport import OpenAnatomyExportLogic  # type: ignore
+import vtk  # Import VTK for handling VTK-specific operations
 
 def main():
     # Ensure correct number of arguments
@@ -66,14 +67,18 @@ def main():
         outputFormat='glTF'                 # Export format
     )
 
-    # Export the segmentation node with color information as .seg.nrrd
-    segmentation_filepath = os.path.join(output_folder, base_filename + ".seg.nrrd")
-    success_seg = slicer.util.saveNode(segmentVolumeNode, segmentation_filepath)
-    if not success_seg:
-        print("Failed to save segmentation node to:", segmentation_filepath)
+    # Export the segmentation node to a labelmap volume node
+    labelmapVolumeNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLLabelMapVolumeNode")
+    slicer.modules.segmentations.logic().ExportAllSegmentsToLabelmapNode(segmentVolumeNode, labelmapVolumeNode)
+
+    # Save the labelmap volume node as a .nii.gz file
+    labelmap_filepath = os.path.join(output_folder, base_filename + ".nii.gz")
+    success_labelmap = slicer.util.saveNode(labelmapVolumeNode, labelmap_filepath)
+    if not success_labelmap:
+        print("Failed to save labelmap volume node to:", labelmap_filepath)
         sys.exit(1)
     else:
-        print("Segmentation node saved successfully to:", segmentation_filepath)
+        print("Labelmap volume node saved successfully to:", labelmap_filepath)
 
     # Create JSON Mapping of Segments
     try:
@@ -87,8 +92,8 @@ def main():
         # Initialize a dictionary to hold label value to segment name mapping
         segment_mapping = {}
 
+        # Assume label values start from 1 and correspond to the order of segments
         for i in range(segmentIdList.GetNumberOfValues()):
-            label_value = i + 1  # Assuming label values start from 1
             segment_id = segmentIdList.GetValue(i)
             segment = segmentation.GetSegment(segment_id)
             if not segment:
@@ -96,6 +101,7 @@ def main():
                 continue
 
             segment_name = segment.GetName()
+            label_value = i + 1  # Label values start from 1
 
             # Add the mapping to the dictionary
             segment_mapping[str(label_value)] = segment_name
