@@ -5,6 +5,7 @@ import slicer  # type: ignore
 from TotalSegmentator import TotalSegmentatorLogic  # type: ignore
 from OpenAnatomyExport import OpenAnatomyExportLogic  # type: ignore
 import vtk  # Import VTK for handling VTK-specific operations
+import zipfile  # Importing zipfile to handle the creation of zip archives
 
 def main():
     # Ensure correct number of arguments
@@ -60,64 +61,89 @@ def main():
     OAExportLogic = OpenAnatomyExportLogic()
     shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
     inputItem = shNode.GetItemByDataNode(segmentVolumeNode)
-    OAExportLogic.exportModel(
-        inputItem=inputItem,                # Segmentation Item to convert
-        outputFolder=output_folder,         # Output folder
-        reductionFactor=0.01,               # Mesh simplification factor
-        outputFormat='glTF'                 # Export format
-    )
 
-    # Export the segmentation node to a labelmap volume node
-    labelmapVolumeNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLLabelMapVolumeNode")
-    slicer.modules.segmentations.logic().ExportAllSegmentsToLabelmapNode(segmentVolumeNode, labelmapVolumeNode)
+    # Create a ZIP file containing all outputs
+    zip_filepath = os.path.join(output_folder, base_filename + ".zip")
+    zip_contents = []  # List to track contents of the zip file
 
-    # Save the labelmap volume node as a .nii.gz file
-    labelmap_filepath = os.path.join(output_folder, base_filename + ".nii.gz")
-    success_labelmap = slicer.util.saveNode(labelmapVolumeNode, labelmap_filepath)
-    if not success_labelmap:
-        print("Failed to save labelmap volume node to:", labelmap_filepath)
-        sys.exit(1)
-    else:
-        print("Labelmap volume node saved successfully to:", labelmap_filepath)
+    with zipfile.ZipFile(zip_filepath, 'w', compression=zipfile.ZIP_DEFLATED) as zipf:
+        # Export glTF directly to zip
+        gltf_filepath = os.path.join(output_folder, base_filename + ".gltf")
+        OAExportLogic.exportModel(
+            inputItem=inputItem,                # Segmentation Item to convert
+            outputFolder=output_folder,         # Output folder
+            reductionFactor=0.01,               # Mesh simplification factor
+            outputFormat='glTF'                 # Export format
+        )
+        if os.path.exists(gltf_filepath):
+            zipf.write(gltf_filepath, os.path.basename(gltf_filepath))
+            zip_contents.append(os.path.basename(gltf_filepath))
+            os.remove(gltf_filepath)
 
-    # Create JSON Mapping of Segments
-    try:
-        # Get the segmentation object
-        segmentation = segmentVolumeNode.GetSegmentation()
+        # Export the segmentation node to a labelmap volume node and add directly to zip
+        labelmapVolumeNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLLabelMapVolumeNode")
+        slicer.modules.segmentations.logic().ExportAllSegmentsToLabelmapNode(segmentVolumeNode, labelmapVolumeNode)
+        labelmap_filepath = os.path.join(output_folder, base_filename + ".nii.gz")
+        success_labelmap = slicer.util.saveNode(labelmapVolumeNode, labelmap_filepath)
+        if not success_labelmap:
+            print("Failed to save labelmap volume node to:", labelmap_filepath)
+            sys.exit(1)
+        else:
+            zipf.write(labelmap_filepath, os.path.basename(labelmap_filepath))
+            zip_contents.append(os.path.basename(labelmap_filepath))
+            os.remove(labelmap_filepath)
 
-        # Retrieve all segment IDs
-        segmentIdList = vtk.vtkStringArray()
-        segmentation.GetSegmentIDs(segmentIdList)
+        # Create JSON Mapping of Segments and add directly to zip
+        try:
+            # Get the segmentation object
+            segmentation = segmentVolumeNode.GetSegmentation()
 
-        # Initialize a dictionary to hold label value to segment name mapping
-        segment_mapping = {}
+            # Retrieve all segment IDs
+            segmentIdList = vtk.vtkStringArray()
+            segmentation.GetSegmentIDs(segmentIdList)
 
-        # Assume label values start from 1 and correspond to the order of segments
-        for i in range(segmentIdList.GetNumberOfValues()):
-            segment_id = segmentIdList.GetValue(i)
-            segment = segmentation.GetSegment(segment_id)
-            if not segment:
-                print(f"Warning: Segment ID {segment_id} could not be retrieved.")
-                continue
+            # Initialize a dictionary to hold label value to segment name mapping
+            segment_mapping = {}
 
-            segment_name = segment.GetName()
-            label_value = i + 1  # Label values start from 1
+            # Assume label values start from 1 and correspond to the order of segments
+            for i in range(segmentIdList.GetNumberOfValues()):
+                segment_id = segmentIdList.GetValue(i)
+                segment = segmentation.GetSegment(segment_id)
+                if not segment:
+                    print(f"Warning: Segment ID {segment_id} could not be retrieved.")
+                    continue
 
-            # Add the mapping to the dictionary
-            segment_mapping[str(label_value)] = segment_name
+                segment_name = segment.GetName()
+                label_value = i + 1  # Label values start from 1
 
-        # Define the JSON file path
-        json_filepath = os.path.join(output_folder, base_filename + ".json")
+                # Add the mapping to the dictionary
+                segment_mapping[str(label_value)] = segment_name
 
-        # Write the mapping to the JSON file with indentation for readability
-        with open(json_filepath, 'w') as json_file:
-            json.dump(segment_mapping, json_file, indent=4)
+            # Define the JSON file path
+            json_filepath = os.path.join(output_folder, base_filename + ".json")
 
-        print("Segment mapping JSON saved successfully to:", json_filepath)
+            # Write the mapping to the JSON file with indentation for readability
+            with open(json_filepath, 'w') as json_file:
+                json.dump(segment_mapping, json_file, indent=4)
 
-    except Exception as e:
-        print("Failed to create segment mapping JSON:", str(e))
-        sys.exit(1)
+            zipf.write(json_filepath, os.path.basename(json_filepath))
+            zip_contents.append(os.path.basename(json_filepath))
+            os.remove(json_filepath)
+
+            print("Segment mapping JSON saved successfully to:", json_filepath)
+
+        except Exception as e:
+            print("Failed to create segment mapping JSON:", str(e))
+            sys.exit(1)
+
+    print("All outputs have been zipped successfully to:", zip_filepath)
+
+    # Create a JSON file listing the contents of the zip file
+    contents_json_filepath = os.path.join(output_folder, f"{base_filename}_contents.json")
+    with open(contents_json_filepath, 'w') as contents_json_file:
+        json.dump(zip_contents, contents_json_file, indent=4)
+
+    print("Contents JSON saved successfully to:", contents_json_filepath)
 
     # Clean up the scene to free memory
     slicer.mrmlScene.Clear(0)
