@@ -44,6 +44,20 @@ def main():
         print("Failed to load volume:", input_filepath)
         sys.exit(1)
 
+    # *** Begin: Save Original Input as .nii.gz ***
+    # Define the path for the original converted file
+    original_nii_gz_filename = f"{base_filename}_original.nii.gz"
+    original_nii_gz_filepath = os.path.join(output_folder, original_nii_gz_filename)
+
+    # Save the loaded volume as .nii.gz
+    success_original = slicer.util.saveNode(loadedNode, original_nii_gz_filepath)
+    if not success_original:
+        print(f"Failed to save original input as .nii.gz: {original_nii_gz_filepath}")
+        sys.exit(1)
+    else:
+        print(f"Original input saved successfully as: {original_nii_gz_filepath}")
+    # *** End: Save Original Input as .nii.gz ***
+
     # Create a new segmentation node
     segmentVolumeNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLSegmentationNode")
     segmentVolumeNode.SetName(base_filename)
@@ -67,6 +81,14 @@ def main():
     zip_contents = []  # List to track contents of the zip file
 
     with zipfile.ZipFile(zip_filepath, 'w', compression=zipfile.ZIP_DEFLATED) as zipf:
+        # *** Begin: Add Original .nii.gz to ZIP ***
+        if os.path.exists(original_nii_gz_filepath):
+            zipf.write(original_nii_gz_filepath, os.path.basename(original_nii_gz_filepath))
+            zip_contents.append(os.path.basename(original_nii_gz_filepath))
+            os.remove(original_nii_gz_filepath)  # Clean up the original converted file
+            print(f"Added and removed original .nii.gz: {original_nii_gz_filepath}")
+        # *** End: Add Original .nii.gz to ZIP ***
+
         # Export glTF directly to zip
         gltf_filepath = os.path.join(output_folder, base_filename + ".gltf")
         OAExportLogic.exportModel(
@@ -79,6 +101,7 @@ def main():
             zipf.write(gltf_filepath, os.path.basename(gltf_filepath))
             zip_contents.append(os.path.basename(gltf_filepath))
             os.remove(gltf_filepath)
+            print(f"Added and removed glTF file: {gltf_filepath}")
 
         # Export the segmentation node to a labelmap volume node and add directly to zip
         labelmapVolumeNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLLabelMapVolumeNode")
@@ -92,6 +115,7 @@ def main():
             zipf.write(labelmap_filepath, os.path.basename(labelmap_filepath))
             zip_contents.append(os.path.basename(labelmap_filepath))
             os.remove(labelmap_filepath)
+            print(f"Added and removed labelmap .nii.gz: {labelmap_filepath}")
 
         # Create JSON Mapping of Segments and add directly to zip
         try:
@@ -129,6 +153,7 @@ def main():
             zipf.write(json_filepath, os.path.basename(json_filepath))
             zip_contents.append(os.path.basename(json_filepath))
             os.remove(json_filepath)
+            print(f"Added and removed JSON mapping file: {json_filepath}")
 
             print("Segment mapping JSON saved successfully to:", json_filepath)
 
@@ -138,12 +163,16 @@ def main():
 
     print("All outputs have been zipped successfully to:", zip_filepath)
 
-    # Create a JSON file listing the contents of the zip file
+    # *** Begin: Add Contents JSON to ZIP ***
     contents_json_filepath = os.path.join(output_folder, f"{base_filename}_contents.json")
     with open(contents_json_filepath, 'w') as contents_json_file:
         json.dump(zip_contents, contents_json_file, indent=4)
 
-    print("Contents JSON saved successfully to:", contents_json_filepath)
+    zipf.write(contents_json_filepath, os.path.basename(contents_json_filepath))
+    zip_contents.append(os.path.basename(contents_json_filepath))
+    os.remove(contents_json_filepath)
+    print("Contents JSON saved and added to ZIP:", contents_json_filepath)
+    # *** End: Add Contents JSON to ZIP ***
 
     # Clean up the scene to free memory
     slicer.mrmlScene.Clear(0)
