@@ -163,16 +163,11 @@ def main():
 
     print("All outputs have been zipped successfully to:", zip_filepath)
 
-    # *** Begin: Add Contents JSON to ZIP ***
+
     contents_json_filepath = os.path.join(output_folder, f"{base_filename}_contents.json")
     with open(contents_json_filepath, 'w') as contents_json_file:
         json.dump(zip_contents, contents_json_file, indent=4)
 
-    zipf.write(contents_json_filepath, os.path.basename(contents_json_filepath))
-    zip_contents.append(os.path.basename(contents_json_filepath))
-    os.remove(contents_json_filepath)
-    print("Contents JSON saved and added to ZIP:", contents_json_filepath)
-    # *** End: Add Contents JSON to ZIP ***
 
     # Clean up the scene to free memory
     slicer.mrmlScene.Clear(0)
