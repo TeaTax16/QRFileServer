@@ -92,7 +92,8 @@ The Flask app will start running on ```http://localhost:8080/```.
 
 Supported file types: ```.nrrd```, ```.nii```, ```.nii.gz```, ```.dcm```, ```.dicom```.
 
-![Upload Files]( )
+![File Upload](https://github.com/user-attachments/assets/d3ec243f-2e28-474d-a4a7-1fd85946f2a5)
+
 
 
 #### **Monitoring Processing Status**
@@ -103,7 +104,8 @@ The home page also displays real-time status updates, including:
 
 The status updates automatically ever few seconds.
 
-![Processing Status]( )
+![Processing Status](https://github.com/user-attachments/assets/cd1257de-ca20-4812-b45b-92268810fd67)
+
 
 
 #### **Accessing Processed Files**
@@ -111,9 +113,13 @@ The status updates automatically ever few seconds.
 - **Selecting Files for Download**: 
   - On the files pages, select the files you wish to download by checking the corresponding check boxes
   - Click on ```Generate QR Code```
+ ![Files List](https://github.com/user-attachments/assets/ab7a20bc-7b34-4110-a356-559b5e3d75f3)
+
 - **Downloading via QR**:
   - A QR code will be displayed in a model window.
   - Scan the QR code with a device connected to the same network as the server.
+ ![QR Code](https://github.com/user-attachments/assets/1f179c10-f95d-42f4-8b8e-a59b591c2597)
+
 
 ### 5. Stopping the Scripts
 To stop the script and server, return to the  terminal window and press ```Ctrl+C```.
