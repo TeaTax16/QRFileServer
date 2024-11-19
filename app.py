@@ -1,10 +1,9 @@
-from flask import Flask, send_from_directory, jsonify, request, redirect, url_for, render_template, make_response
+from flask import Flask, send_from_directory, jsonify, request, redirect, url_for, render_template
 import os
 from werkzeug.utils import secure_filename
 import threading
 import queue
 import subprocess
-import time
 import qrcode
 import io
 import base64
@@ -13,9 +12,9 @@ import zipfile
 import datetime
 
 # Paths to the input and output folders and the Slicer executable
-input_folder = r'directory/to/input/folder'
-output_folder = r'directory/to/output/folder'
-slicer_path = r'directory/to/Slicer.exe'
+input_folder = r'C:\Users\Takrim XARlabs\Documents\My Scripts\SegTest\Input'
+output_folder = r'C:\Users\Takrim XARlabs\Documents\My Scripts\SegTest\Output'
+slicer_path = r'C:\Users\Takrim XARlabs\AppData\Local\slicer.org\Slicer 5.6.2\Slicer.exe'
 
 # Ensure the input and output folders exist
 os.makedirs(input_folder, exist_ok=True)
@@ -189,8 +188,6 @@ def delete_zip():
 # App route to show QR code page
 @app.route('/files/qr', methods=['GET'])
 def files_qr():
-    # Since we are changing the URL to /files/qr when the modal pops up,
-    # this route can render the same template as /files, but with the modal open.
     return files()
 
 # App route to list files with a download button and QR code generation
