@@ -1,0 +1,79 @@
+body.home-page {
+    background-color: #000000;
+    color: #FFFFFF;
+}
+
+body.files-page {
+    background-color: #191919;
+    color: #FFFFFF;
+}
+
+.btn-main {
+    background-color: #7049ce;
+    color: #FFFFFF;
+    border: none;
+    transition: background-color 0.3s, border 0.3s;
+}
+
+.btn-main:hover {
+    background-color: #000000;
+    color: #FFFFFF;
+    border: 1px solid #7049ce;
+}
+
+.btn-outline {
+    background-color: #191919;
+    color: #FFFFFF;
+    border: 1px solid #7049ce;
+    transition: background-color 0.3s, border 0.3s;
+}
+
+.btn-outline:hover {
+    background-color: #7049ce;
+    color: #FFFFFF;
+    border: none;
+}
+
+.form-label {
+    color: #FFFFFF;
+}
+
+.card {
+    background-color: #191919;
+    border: 1px solid #7049ce;
+}
+
+.list-group-item {
+    background-color: #191919;
+    color: #FFFFFF;
+    border: none;
+}
+
+.alert {
+    background-color: #7049ce;
+    color: #FFFFFF;
+    border: none;
+}
+
+h1, h2, strong {
+    color: #FFFFFF;
+}
+
+.btn-close {
+    filter: invert(1);
+}
+
+input[type="checkbox"] {
+    accent-color: #7049ce;
+}
+
+.logo-image {
+    max-width: 150px; /* Adjust the max-width as needed */
+    height: auto;
+    margin-bottom: 20px;
+}
+
+.modal-content {
+    background-color: #191919;
+    color: #FFFFFF;
+}
