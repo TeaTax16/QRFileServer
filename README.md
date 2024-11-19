@@ -1,17 +1,17 @@
 # AutomatedSlicerSegmentator
-This project provides a set of Python scripts that create an automated pipeline for processing medical imaging files. The pipeline includes:
-- Uploading the medical imaging files to a specified folder using a web interface.
-- Automatically processing them using 3D Slicer's Total Segmentator extension.
-- Exporting the resulting segmentation to a ```.gltf``` file using the OpenAnatomy Export extension.
-- Using the web interface to view a list and download the processed outputs.
+This project provides and automated pipeline for processing medical imaging files using 3D Slicer. The pipeline includes:
+- Using a web interface to upload medical imaging files.
+- Automatically processing them using 3D Slicer's Total Segmentation extension.
+- Exporting the resulting segmentation to a .gltf using the OpenAnatomy Export extension.
+- Providing a web interface to view, select and download processed outputs via QR code.
 
 ## Features
-- **Queue Management**: Handles multiple files by queueing them and providing real-time status updates.
-- **Real-Time Updates**: Displays current processing status, including files added, files in queue and files being processed.
+- **Web Interface**: Users can upload medical imaging files and download processing files through a user-friendly web interface.
+- **Queue Management**: Handles multiple files by queueing them and providing real-time status updates displaying files added, files in queue and files being processed.
 - **3D Segmentation**: Uses the TotalSegmentator extension to segment medical imaging data.
 - **Automated Cleanup**: Deletes input files after processing to manage disk space.
 - **Export to GLFT**: Converts the segmentation output to ```.gltf``` format using the OpenAnatomy extension.
-- **Web Interface for File Management**: Allows users to upload new files and download processes files through a web interface.
+- **QR Code Download**: Users can select processed files and download them by scanning a generated QR code. 
 
 ## Pre-Requisites
  This system was developed using the following OS and software versions.
@@ -22,15 +22,10 @@ This project provides a set of Python scripts that create an automated pipeline 
  Other configurations may work, however only the above have been tested.
 
 ### Install Required Python Packages
-#### **Watchdog**: used for file monitoring
-```
-pip install watchdog
-```
-
-#### **Flask**: used for file server
-```
-pip install flask
-```
+```pip install flask werkzeug qrcode[pil]```
+- **Flask**: Web framework used for the web interface
+- **Werkzeug**: Utility library used by Flask
+- **qrcode**: Library for generating QR Codes
 
 ### Install 3D Slicer Extensions
 #### Total Segmentator
@@ -47,7 +42,7 @@ pip install flask
 
 ## Usage Instructions
 ### 1. Configure Input and Output Folders
-#### Web App variables (```webapp.py```)
+#### Application variables (```app.py```)
 Edit the following variables in the script to specify your paths:
 ```python
 input_folder = r'directory/to/input/folder'
@@ -55,18 +50,41 @@ output_folder = r'directory/to/output/folder'
 slicer_path = r'directory/to/Slicer.exe'
 ```
 
-### 2. Running the Scripts
-#### Start the Folder Monitoring Script
+- ```input_folder```: Path to the folder where the uploaded files will be stored.
+- ```output_folder```: Path to the folder where the processed files will be stored.
+- ```slicer_path```: Path to the 3D Slicer executable.
+
+
+### 2. Project structure
+Project directory should be structured as follows:
+```angular2html
+project_folder/
+├── app.py
+├── slicer_processing.py
+├── templates/
+│   ├── home.html
+│   └── files.html
+├── static/
+│   ├── styles.css
+│   └── logo.png (optional)
+```
+- ```app.py```: The main Flask application script.
+- ```slicer_processing.py```: The script executed by 3D Slicer to process files.
+- ```templates/```: Directory containing HTML templates.
+- ```static/```: Directory containing static files like CSS and images.
+
+
+### 3. Running the Application
+#### Start the Flask Application
 - Open a terminal or command prompt.
-- Navigate to the directory containing ```webapp.py```.
+- Navigate to the directory containing ```app.py```.
 - Run the script:
 ```
-python webapp.py
+python app.py
 ```
-
 The Flask app will start running on ```http://localhost:8080/```.
 
-### 3. Processing files
+### 4. Processing files
 #### **Uploading Files via Web Interface**
 - Open a web browser and navigate to ```http://localhost:8080/upload```.
 - Use the file selector to choose one or more medical imaging files to upload.
@@ -74,46 +92,47 @@ The Flask app will start running on ```http://localhost:8080/```.
 
 Supported file types: ```.nrrd```, ```.nii```, ```.nii.gz```, ```.dcm```, ```.dicom```.
 
-![Upload Files](https://github.com/user-attachments/assets/214fdb30-4835-4712-8e4a-712a02d6efa5)
+![Upload Files]( )
 
 
 #### **Monitoring Processing Status**
-The same tab will show real-time status updates, including:
-- New Files added.
-- Currently processing file.
-- Number of files in the queue.
+The home page also displays real-time status updates, including:
+- **Queue**: Files waiting to be processed.
+- **Processing**: Currently processing files.
+- **Files left**: Number of files left in the queue
 
-![Processing Status](https://github.com/user-attachments/assets/aaa6028c-2823-40ac-9d08-39a5851c88fd)
+The status updates automatically ever few seconds.
 
+![Processing Status]( )
 
 
 #### **Accessing Processed Files**
-- **List Files**: Use the ```Open JSON List``` button on the page or navigate to ```http://localhost:8080/files``` to view a JSON list of processed files in a new file.
-- **Download a File**: Navigate to ```http://localhost:8080/download/<filename>```, replacing ```<filename>``` with the actual filename.
+- **View available files**: Click on the ```Download Files``` button or navigate to ```http://localhost:8080/files```.
+- **Selecting Files for Download**: 
+  - On the files pages, select the files you wish to download by checking the corresponding check boxes
+  - Click on ```Generate QR Code```
+- **Downloading via QR**:
+  - A QR code will be displayed in a model window.
+  - Scan the QR code with a device connected to the same network as the server.
 
-Example:
-```
-http://localhost:8080/download/segmented_model.gltf
-```
-
-### 4. Stopping the Scripts
+### 5. Stopping the Scripts
 To stop the script and server, return to the  terminal window and press ```Ctrl+C```.
 
 ## Scripts Overview
-### 1. ```webapp.py```
-This script uses the ```watchdog``` library to monitor the input folder. Key functionalities include:
-- **Folder Monitoring**: Detects new files added to the input folder.
-- **Queue Management**: Adds new files to a processing queue and manages them efficiently.
-- **Real-Time Status Updates**: Provides real-time console updates on processing status.
+### 1. ```app.py```
+This script is the main Flask application. Main functionalities include:
+- **File Upload**: Provides a web interface for users to upload medical imaging files.
+- **Queue Management**: Manages the uploaded files using a queue and processes them in the background using threading.
 - **Processing Workflow**:
-    - Starts 3D Slicer in the background using ```subprocess```.
-    - Runs the ```slicer_processing.py``` script within 3D Slicer to perform segmentation
-    - Deletes the input file after processing to manage disk space.
-
-The script also provides a simple web interface to:
-- **Upload Files**: Users can upload one or more medical imaging files to be automatically processed.
-- **List Files**: Provides a JSON list of all files in the output folder.
-- **Download Files**: Allows users to download specific files from the output folder.
+  - Starts 3D Slicer in the background using ```subprocess```.
+  - Runs the ```slicer_processing.py``` script within 3D Slicer to perform segmentation.
+  - Deletes the input file after processing to manage disk space.
+- **Real-Time Status Updates**: Provides real-time updates on processing status via web interface
+- **File Download with QR Code**:
+  - Lists processed files and allows users to select files for download.
+  - Generates a zip archive of selected files.
+  - Generated a QR code that links to the download URL for the zip file.
+  - Deletes the zip file after download to manage disk space.
 
 ### 2. ```slicer_processing.py```
 This script runs inside 3D Slicer and performs the following:
@@ -121,6 +140,14 @@ This script runs inside 3D Slicer and performs the following:
 - Runs Total Segmentator to segment the image.
 - Exports the segmentations to a ```.gltf``` file using ```OpenAnatomy Export```.
 - Saves the output in the specified output folder.
+
+### 3. Templates and Static Files
+- **Templates:**
+  - ```home.html```: The template for the home page, which includes file upload and status display.
+  - ```files.html```: The template for the files page, which allows users to select and download files.
+- **Static Files:**
+  - ```styles.css```: Contains the CSS styles for the application.
+  - ```logo.png```: Optional logo image displayed on the home page
 
 ## Enhancements and Future Work
 - **Authentication**: Implement user authentication for the web interface to restrict access
