@@ -12,9 +12,9 @@ import zipfile
 import datetime
 
 # Paths to the input and output folders and the Slicer executable
-input_folder = r'C:\Users\Takrim XARlabs\Documents\My Scripts\SegTest\Input'
-output_folder = r'C:\Users\Takrim XARlabs\Documents\My Scripts\SegTest\Output'
-slicer_path = r'C:\Users\Takrim XARlabs\AppData\Local\slicer.org\Slicer 5.6.2\Slicer.exe'
+input_folder = r'directory/to/input/folder'
+output_folder = r'directory/to/output/folder'
+slicer_path = r'directory/to/Slicer.exe'
 
 # Ensure the input and output folders exist
 os.makedirs(input_folder, exist_ok=True)
@@ -31,7 +31,10 @@ status_lock = threading.Lock()  # lock to synchronize status updates
 # Get the local network IP address of the host.
 def get_local_ip():
     hostname = socket.gethostname()
-    return socket.gethostbyname(hostname)
+    try:
+        return socket.gethostbyname(hostname)
+    except socket.gaierror:
+        return None
 
 # Check for allowed filetypes
 def allowed_file(filename):
@@ -66,7 +69,7 @@ def process_queue():
 processing_thread = threading.Thread(target=process_queue, daemon=True)
 processing_thread.start()
 
-# App route to the home page (previously the upload page)
+# App route to the home page (upload page)
 @app.route('/', methods=['GET', 'POST'])
 def home():
     global new_files_list
@@ -100,10 +103,10 @@ def home():
                         error_message = f'File type not allowed: {file.filename}'
                         break
 
-        if not error_message and uploaded_filenames:
-            return redirect(url_for('home', success=True))
-        elif not error_message:
-            error_message = 'No valid files uploaded'
+            if not error_message and uploaded_filenames:
+                return redirect(url_for('home', success=True))
+            elif not error_message:
+                error_message = 'No valid files uploaded'
 
     else:
         success = request.args.get('success')
@@ -153,6 +156,12 @@ def qr_code():
     if not filename:
         return "Error: No filename provided", 400
 
+    # Validate filename to prevent directory traversal
+    filename = secure_filename(filename)
+    file_path = os.path.join(output_folder, filename)
+    if not os.path.exists(file_path):
+        return "Error: File does not exist", 404
+
     # Get the local IP address
     local_ip = get_local_ip()
     if not local_ip:
@@ -167,70 +176,15 @@ def qr_code():
     img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
     return jsonify({'qr_code': img_base64})
 
-# App route to delete the zip file when the modal is closed
-@app.route('/delete_zip', methods=['POST'])
-def delete_zip():
-    data = request.get_json()
-    zip_filename = data.get('zip_filename')
-    if zip_filename and zip_filename.endswith('.zip'):
-        zip_filepath = os.path.join(output_folder, zip_filename)
-        if os.path.exists(zip_filepath):
-            try:
-                os.remove(zip_filepath)
-                return jsonify({'status': 'success', 'message': 'Zip file deleted'})
-            except Exception as e:
-                return jsonify({'status': 'error', 'message': str(e)}), 500
-        else:
-            return jsonify({'status': 'error', 'message': 'Zip file not found'}), 404
-    else:
-        return jsonify({'status': 'error', 'message': 'Invalid zip filename'}), 400
-
-# App route to show QR code page
-@app.route('/files/qr', methods=['GET'])
-def files_qr():
-    return files()
-
-# App route to list files with a download button and QR code generation
-@app.route('/files', methods=['GET', 'POST'])
+# App route to list files with individual QR code generation
+@app.route('/files', methods=['GET'])
 def files():
     error_message = None
-    qr_code = None  # Initialize qr_code as None
-    zip_filename = None  # Initialize zip_filename as None
-    show_modal = False  # Flag to determine if modal should be shown
-    if request.method == 'POST':
-        # Process selected files
-        selected_files = request.form.getlist('selected_files')
-        if not selected_files:
-            # Return an error message
-            error_message = 'No files selected'
-        else:
-            # Create a zip file with selected files
-            current_time = datetime.datetime.now()
-            timestamp = current_time.strftime("%d%m%y_%H%M")
-            zip_filename = f"{timestamp}.zip"  # Updated filename format
-            zip_filepath = os.path.join(output_folder, zip_filename)
-            with zipfile.ZipFile(zip_filepath, 'w') as zipf:
-                for filename in selected_files:
-                    file_path = os.path.join(output_folder, filename)
-                    zipf.write(file_path, arcname=filename)
-            # Generate download URL using local IP
-            local_ip = get_local_ip()
-            download_url = f"http://{local_ip}:8080/download/{zip_filename}"
-            # Generate QR code
-            img = qrcode.make(download_url)
-            buffer = io.BytesIO()
-            img.save(buffer, format='PNG')
-            buffer.seek(0)
-            img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-            qr_code = img_base64
-            show_modal = True
-    elif request.path == '/files/qr':
-        # If the URL is /files/qr, we should show the modal
-        show_modal = True
-
-    # For both GET and POST methods, render the template
+    # For GET request, simply list the files
     files = os.listdir(output_folder)
-    return render_template('files.html', files=files, error_message=error_message, qr_code=qr_code, zip_filename=zip_filename, show_modal=show_modal)
+    return render_template('files.html', files=files, error_message=error_message)
+
+# Removed '/files/qr' and '/delete_zip' routes as they are no longer needed
 
 # Start the Flask app
 if __name__ == '__main__':
