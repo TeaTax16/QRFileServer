@@ -63,11 +63,13 @@ The Flask app will start running on ```http://localhost:8080/```.
 ### 4. Managing files
 #### **Access the Home Page**
 - Open a web browser and navigate to ```http://localhost:8080/```.
-- 
+
 #### **Uploading Files via Web Interface**
 - **Drag and Drop**: Drag one or more files from your file explorer and drop them onto the designated dropzone area on the home page.
 - **Click to Select**: Click on the dropzone area to open the file dialog, then select one or more files to upload.
 - Files are uploaded automatically upon being dropped or selected, with feedback provided below the dropzone.
+
+![{97A41196-7717-4013-940C-8634D76B79FD}](https://github.com/user-attachments/assets/ccf77c98-642e-46e5-b48c-fc130d2b4151)
 
 #### **Viewing and Managing Uploaded Files**
 - From the home page, click on the **View QR Codes** button.
@@ -76,6 +78,9 @@ The Flask app will start running on ```http://localhost:8080/```.
   - **File Name**:The name of the uploaded file.
   - **Show QR**: Button to generate and display a QR code for downloading the file.
   - **Delete**: Button to remove the specific file from the server.
+  
+![{E37D2AE6-7ECE-4049-930A-C57EC655442F}](https://github.com/user-attachments/assets/0e08baa9-69c7-4861-969c-a150d2e21c81)
+
 
 #### **Generating QR Code for download**
 - Click the **Show QR** button next to a file to generate its QR code.
@@ -89,7 +94,8 @@ The Flask app will start running on ```http://localhost:8080/```.
 #### **Back to the Main Menu**
 - From the files page, click the **Back to Main Menu** button to return to the home page.
 
-![File Upload](https://github.com/user-attachments/assets/d3ec243f-2e28-474d-a4a7-1fd85946f2a5)
+![{6A1C19BD-0519-4031-91D8-960A66597992}](https://github.com/user-attachments/assets/d2085028-934a-4281-b9ac-ed67d8ea8d21)
+
 
 
 ### 5. Stopping the Scripts
