@@ -33,7 +33,7 @@ upload_folder = r'/directory/to/uploads'
 
 ### 2. Project structure
 Project directory should be structured as follows:
-```angular2html
+```
 project_folder/
 ├── app.py
 ├── templates/

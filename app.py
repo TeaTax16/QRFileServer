@@ -7,7 +7,7 @@ import base64
 import socket
 
 # Path to the uploads folder
-upload_folder = r'C:\Users\Takrim XARlabs\Documents\My Scripts\SegTest\FilesStorage'
+upload_folder = r'directory\to\uploads'
 
 # Ensure the uploads folder exists
 os.makedirs(upload_folder, exist_ok=True)
