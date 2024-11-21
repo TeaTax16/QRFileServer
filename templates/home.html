@@ -4,18 +4,20 @@
     <!-- Head Contents -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XARhub File Server</title>
+    <title>XARhub Web App</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Include the styles.css file -->
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    
 </head>
 <body class="home-page">
 <div class="container">
     <div class="py-5 text-center">
         <!-- Add the logo image here -->
         <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo-image">
-        <h1>XARhub File Server</h1>
+        <h1>XARhub Web App</h1>
+        <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
         {% for category, message in messages %}
@@ -26,34 +28,116 @@
         {% endfor %}
         {% endif %}
         {% endwith %}
-        {% if error_message %}
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ error_message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        {% endif %}
     </div>
 
-    <!-- File upload form -->
+    <!-- File upload section with drag and drop -->
     <div class="card p-4 mb-4">
-        <form method="post" enctype="multipart/form-data" class="mb-3">
-            <div class="mb-3">
-                <label for="fileInput" class="form-label"><strong>Choose files to upload</strong> (multiple allowed):</label>
-                <input type="file" name="file[]" id="fileInput" class="form-control" multiple>
-            </div>
-            <!-- Centering the buttons in a row -->
-            <div class="d-flex justify-content-center gap-3">
-                <button type="submit" class="btn btn-main">Upload</button>
-                <a href="/files" class="btn btn-main">View QR Codes</a>
-            </div>
-        </form>
+        <!-- Drag and Drop Area -->
+        <div id="dropzone" class="dropzone mb-3">
+            Drag and drop files here or click to select files.
+            <input type="file" name="file[]" id="dropzone-input" multiple>
+        </div>
+        <!-- Feedback Area -->
+        <div id="upload-feedback" class="upload-feedback"></div>
+        <!-- Navigation Button -->
+        <div class="d-flex justify-content-center gap-3">
+            <a href="/files" class="btn btn-main">View QR Codes</a>
+        </div>
     </div>
 
     <hr>
-    
+
+    <!-- Removed Processing Status Section since processing is no longer needed -->
 </div>
 
 <!-- Bootstrap JS and dependencies -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const dropzone = document.getElementById('dropzone');
+        const dropzoneInput = document.getElementById('dropzone-input');
+        const uploadFeedback = document.getElementById('upload-feedback');
+
+        // Highlight dropzone when file is dragged over
+        dropzone.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.add('dragover');
+        });
+
+        dropzone.addEventListener('dragleave', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.remove('dragover');
+        });
+
+        dropzone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        // Open file dialog when dropzone is clicked
+        dropzone.addEventListener('click', function () {
+            dropzoneInput.click();
+        });
+
+        // Handle files selected via dropzone input
+        dropzoneInput.addEventListener('change', function () {
+            const files = dropzoneInput.files;
+            handleFiles(files);
+        });
+
+        // Function to handle files
+        function handleFiles(files) {
+            if (files.length === 0) {
+                return;
+            }
+            uploadFiles(files);
+        }
+
+        // Function to upload files asynchronously
+        function uploadFiles(files) {
+            const formData = new FormData();
+
+            for (let i = 0; i < files.length; i++) {
+                formData.append('file[]', files[i]);
+            }
+
+            fetch('/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        uploadFeedback.innerHTML = `<div class="alert alert-success alert-dismissible fade show" role="alert">
+                        ${data.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>`;
+                        // Optionally, reset the file input
+                        dropzoneInput.value = '';
+                    } else {
+                        uploadFeedback.innerHTML = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        ${data.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error uploading files:', error);
+                    uploadFeedback.innerHTML = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    An error occurred while uploading the files.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>`;
+                });
+        }
+    });
+</script>
 </body>
 </html>

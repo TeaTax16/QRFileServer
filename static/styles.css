@@ -63,9 +63,7 @@ body.files-page {
 }
 
 .alert {
-    background-color: #7049ce;
-    color: #FFFFFF;
-    border: none;
+    border-radius: 0.25rem;
 }
 
 .alert-success {
@@ -104,4 +102,27 @@ input[type="checkbox"] {
 .modal-content {
     background-color: #191919;
     color: #FFFFFF;
+}
+
+.dropzone {
+    border: 2px dashed #7049ce;
+    border-radius: 5px;
+    padding: 30px;
+    text-align: center;
+    color: #7049ce;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.dropzone.dragover {
+    background-color: #f8f9fa;
+    border-color: #000000;
+    color: #000000;
+}
+
+.dropzone input[type="file"] {
+    display: none;
+}
+
+.upload-feedback {
+    margin-top: 15px;
 }

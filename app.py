@@ -26,38 +26,43 @@ def get_local_ip():
 # Route to the home page (upload page)
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    error_message = None  # Initialize error message
     if request.method == 'POST':
         # Check if the POST request has the file part
         if 'file[]' not in request.files:
-            error_message = 'No file part in the request'
-        else:
-            # Retrieve list of files
-            files = request.files.getlist('file[]')
-            # Validate and save the files
-            if not files or files[0].filename == '':
-                error_message = 'No selected files'
-            else:
-                uploaded_filenames = []
-                for file in files:
-                    if file.filename == '':
-                        continue  # Skip empty filenames
-                    filename = secure_filename(file.filename)
-                    filepath = os.path.join(upload_folder, filename)
-                    file.save(filepath)
-                    uploaded_filenames.append(filename)
-                if uploaded_filenames:
-                    flash('Files uploaded successfully!', 'success')
-                    return redirect(url_for('home'))
-                else:
-                    error_message = 'No valid files uploaded'
-    else:
-        success = request.args.get('success')
+            response = {'status': 'error', 'message': 'No file part in the request.'}
+            return jsonify(response), 400
 
-    # Render the home template
-    return render_template('home.html',
-                           success=success,
-                           error_message=error_message)
+        # Retrieve list of files
+        files = request.files.getlist('file[]')
+
+        # Validate and save the files
+        if not files or all(file.filename == '' for file in files):
+            response = {'status': 'error', 'message': 'No files selected for uploading.'}
+            return jsonify(response), 400
+
+        uploaded_filenames = []
+        for file in files:
+            if file and file.filename != '':
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(upload_folder, filename)
+                file.save(filepath)
+                uploaded_filenames.append(filename)
+
+        if uploaded_filenames:
+            message = f'Uploaded {len(uploaded_filenames)} file(s) successfully!'
+            # If the request is AJAX, return JSON
+            if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                response = {'status': 'success', 'message': message, 'filenames': uploaded_filenames}
+                return jsonify(response), 200
+            else:
+                flash(message, 'success')
+                return redirect(url_for('home'))
+        else:
+            response = {'status': 'error', 'message': 'No valid files were uploaded.'}
+            return jsonify(response), 400
+
+    # For GET request, simply render the home page
+    return render_template('home.html')
 
 # Route to list all files in the server as a JSON
 @app.route('/jsonlist', methods=['GET'])
@@ -76,18 +81,18 @@ def download_file(filename):
 def qr_code():
     filename = request.args.get('filename')
     if not filename:
-        return "Error: No filename provided", 400
+        return "Error: No filename provided.", 400
 
     # Validate filename to prevent directory traversal
     filename = secure_filename(filename)
     file_path = os.path.join(upload_folder, filename)
     if not os.path.exists(file_path):
-        return "Error: File does not exist", 404
+        return "Error: File does not exist.", 404
 
     # Get the local IP address
     local_ip = get_local_ip()
     if not local_ip:
-        return "Error: Could not determine local IP address", 500
+        return "Error: Could not determine local IP address.", 500
 
     # Generate the download URL using the local IP and port 8080
     download_url = f"http://{local_ip}:8080/download/{filename}"
@@ -98,13 +103,20 @@ def qr_code():
     img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
     return jsonify({'qr_code': img_base64})
 
-# Route to list files with individual QR code generation
+# Route to list files with individual QR code generation and search functionality
 @app.route('/files', methods=['GET'])
 def files():
-    error_message = None
-    # For GET request, simply list the files
-    files = os.listdir(upload_folder)
-    return render_template('files.html', files=files, error_message=error_message)
+    # Get the search query from the URL parameters
+    query = request.args.get('query', '').strip().lower()
+    all_files = os.listdir(upload_folder)
+
+    if query:
+        # Filter files that contain the query string (case-insensitive)
+        filtered_files = [f for f in all_files if query in f.lower()]
+    else:
+        filtered_files = all_files
+
+    return render_template('files.html', files=filtered_files, query=request.args.get('query', ''))
 
 # Route to delete a specific file
 @app.route('/delete/<filename>', methods=['POST'])

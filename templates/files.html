@@ -14,6 +14,7 @@
 <div class="container">
     <div class="py-5 text-center">
         <h1>Available Files for Download</h1>
+        <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
         {% for category, message in messages %}
@@ -24,12 +25,17 @@
         {% endfor %}
         {% endif %}
         {% endwith %}
-        {% if error_message %}
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ error_message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        {% endif %}
+    </div>
+
+    <!-- Search Form -->
+    <div class="card p-4 mb-4">
+        <form method="get" action="{{ url_for('files') }}" class="d-flex">
+            <input type="text" name="query" class="form-control me-2" placeholder="Search files..." value="{{ query }}">
+            <button type="submit" class="btn btn-main">Search</button>
+            {% if query %}
+            <a href="{{ url_for('files') }}" class="btn btn-outline ms-2">Clear</a>
+            {% endif %}
+        </form>
     </div>
 
     <div class="card p-4">
