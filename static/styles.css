@@ -34,6 +34,19 @@ body.files-page {
     border: none;
 }
 
+.btn-danger {
+    background-color: #dc3545;
+    color: #FFFFFF;
+    border: none;
+    transition: background-color 0.3s, border 0.3s;
+}
+
+.btn-danger:hover {
+    background-color: #a71d2a;
+    color: #FFFFFF;
+    border: none;
+}
+
 .form-label {
     color: #FFFFFF;
 }
@@ -53,6 +66,21 @@ body.files-page {
     background-color: #7049ce;
     color: #FFFFFF;
     border: none;
+}
+
+.alert-success {
+    background-color: #28a745;
+    color: #FFFFFF;
+}
+
+.alert-danger {
+    background-color: #dc3545;
+    color: #FFFFFF;
+}
+
+.alert-warning {
+    background-color: #ffc107;
+    color: #000000;
 }
 
 h1, h2, strong {

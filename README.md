@@ -1,4 +1,4 @@
-# AutomatedSlicerSegmentator
+# FileServer
 This project provides and automated pipeline for processing medical imaging files using 3D Slicer. The pipeline includes:
 - Using a web interface to upload medical imaging files.
 - Automatically processing them using 3D Slicer's Total Segmentation extension.

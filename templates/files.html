@@ -14,8 +14,18 @@
 <div class="container">
     <div class="py-5 text-center">
         <h1>Available Files for Download</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
         {% if error_message %}
-        <div class="alert alert-dismissible fade show" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
             {{ error_message }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
@@ -29,9 +39,16 @@
             {% for file in files %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 {{ file }}
-                <button type="button" class="btn btn-primary btn-sm show-qr-btn" data-filename="{{ file }}">
-                    Show QR
-                </button>
+                <div>
+                    <button type="button" class="btn btn-main btn-sm me-2 show-qr-btn" data-filename="{{ file }}">
+                        Show QR
+                    </button>
+                    <form method="post" action="{{ url_for('delete_file', filename=file) }}" class="d-inline">
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this file?');">
+                            Delete
+                        </button>
+                    </form>
+                </div>
             </li>
             {% endfor %}
         </ul>
