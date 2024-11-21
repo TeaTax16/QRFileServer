@@ -8,12 +8,10 @@ import qrcode
 import io
 import base64
 import socket
-import zipfile
-import datetime
 
 # Paths to the input and output folders and the Slicer executable
 input_folder = r'directory/to/input/folder'
-output_folder = r'directory/to/output/folder'
+output_folder = r'C:\Users\Takrim XARlabs\Documents\My Scripts\SegTest\Output'
 slicer_path = r'directory/to/Slicer.exe'
 
 # Ensure the input and output folders exist
@@ -183,8 +181,6 @@ def files():
     # For GET request, simply list the files
     files = os.listdir(output_folder)
     return render_template('files.html', files=files, error_message=error_message)
-
-# Removed '/files/qr' and '/delete_zip' routes as they are no longer needed
 
 # Start the Flask app
 if __name__ == '__main__':
