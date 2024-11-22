@@ -56,7 +56,6 @@ def home():
             return jsonify(response), 400
     return render_template('home.html')
 
-# Additional routes (unchanged from your script)
 @app.route('/download/<filename>', methods=['GET'])
 def download_file(filename):
     filename = secure_filename(filename)
@@ -74,7 +73,7 @@ def qr_code():
     local_ip = get_local_ip()
     if not local_ip:
         return "Error: Could not determine local IP address.", 500
-    download_url = f"https://{local_ip}:8080/download/{filename}"
+    download_url = f"http://{local_ip}:8080/download/{filename}"  # Changed to http
     img = qrcode.make(download_url)
     buffer = io.BytesIO()
     img.save(buffer, format='PNG')
@@ -108,7 +107,7 @@ def delete_file(filename):
 
 # Function to run Flask in a separate thread
 def start_flask():
-    app.run(host='0.0.0.0', port=8080, ssl_context='adhoc')
+    app.run(host='0.0.0.0', port=8080)  # Removed ssl_context
 
 # Main entry point
 if __name__ == '__main__':
@@ -116,10 +115,10 @@ if __name__ == '__main__':
     flask_thread.daemon = True
     flask_thread.start()
 
-    # Open the web app in a PyWebView window (using https)
+    # Open the web app in a PyWebView window using http
     webview.create_window(
         "XARhub",
-        "https://127.0.0.1:8080",
+        "http://127.0.0.1:8080",  # Changed to http
         confirm_close=True
     )
     webview.start()
