@@ -9,65 +9,92 @@ import socket
 import webview
 
 # Path to the uploads folder
-UPLOAD_FOLDER = 'uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+upload_folder = r'uploads'
+
+# Ensure the uploads folder exists
+os.makedirs(upload_folder, exist_ok=True)
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
-# Get the local network IP address
-get_local_ip = lambda: socket.gethostbyname(socket.gethostname())
+# Get the local network IP address of the host
+def get_local_ip():
+    hostname = socket.gethostname()
+    try:
+        return socket.gethostbyname(hostname)
+    except socket.gaierror:
+        return None
 
+# Flask routes
 @app.route('/', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
+        if 'file[]' not in request.files:
+            response = {'status': 'error', 'message': 'No file part in the request.'}
+            return jsonify(response), 400
         files = request.files.getlist('file[]')
         if not files or all(file.filename == '' for file in files):
-            return jsonify({'status': 'error', 'message': 'No files selected for uploading.'}), 400
-
+            response = {'status': 'error', 'message': 'No files selected for uploading.'}
+            return jsonify(response), 400
         uploaded_filenames = []
         for file in files:
-            if file.filename:
+            if file and file.filename != '':
                 filename = secure_filename(file.filename)
-                file.save(os.path.join(UPLOAD_FOLDER, filename))
+                filepath = os.path.join(upload_folder, filename)
+                file.save(filepath)
                 uploaded_filenames.append(filename)
-
         if uploaded_filenames:
             message = f'Uploaded {len(uploaded_filenames)} file(s) successfully!'
             if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return jsonify({'status': 'success', 'message': message, 'filenames': uploaded_filenames}), 200
-            flash(message, 'success')
-            return redirect(url_for('home'))
+                response = {'status': 'success', 'message': message, 'filenames': uploaded_filenames}
+                return jsonify(response), 200
+            else:
+                flash(message, 'success')
+                return redirect(url_for('home'))
+        else:
+            response = {'status': 'error', 'message': 'No valid files were uploaded.'}
+            return jsonify(response), 400
     return render_template('home.html')
 
 @app.route('/download/<filename>', methods=['GET'])
 def download_file(filename):
-    return send_from_directory(UPLOAD_FOLDER, secure_filename(filename), as_attachment=True)
+    filename = secure_filename(filename)
+    return send_from_directory(upload_folder, filename, as_attachment=True)
 
 @app.route('/qr', methods=['GET'])
 def qr_code():
-    filename = secure_filename(request.args.get('filename', ''))
-    if not filename or not os.path.exists(os.path.join(UPLOAD_FOLDER, filename)):
+    filename = request.args.get('filename')
+    if not filename:
+        return "Error: No filename provided.", 400
+    filename = secure_filename(filename)
+    file_path = os.path.join(upload_folder, filename)
+    if not os.path.exists(file_path):
         return "Error: File does not exist.", 404
-
-    download_url = f"http://{get_local_ip()}:8080/download/{filename}"
+    local_ip = get_local_ip()
+    if not local_ip:
+        return "Error: Could not determine local IP address.", 500
+    download_url = f"http://{local_ip}:8080/download/{filename}"  # Changed to http
     img = qrcode.make(download_url)
     buffer = io.BytesIO()
     img.save(buffer, format='PNG')
+    buffer.seek(0)
     img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
     return jsonify({'qr_code': img_base64})
 
 @app.route('/files', methods=['GET'])
 def files():
     query = request.args.get('query', '').strip().lower()
-    all_files = os.listdir(UPLOAD_FOLDER)
-    filtered_files = [f for f in all_files if query in f.lower()] if query else all_files
-    return render_template('files.html', files=filtered_files, query=query)
+    all_files = os.listdir(upload_folder)
+    if query:
+        filtered_files = [f for f in all_files if query in f.lower()]
+    else:
+        filtered_files = all_files
+    return render_template('files.html', files=filtered_files, query=request.args.get('query', ''))
 
 @app.route('/delete/<filename>', methods=['POST'])
 def delete_file(filename):
     filename = secure_filename(filename)
-    file_path = os.path.join(UPLOAD_FOLDER, filename)
+    file_path = os.path.join(upload_folder, filename)
     if os.path.exists(file_path):
         try:
             os.remove(file_path)
@@ -82,7 +109,16 @@ def delete_file(filename):
 def start_flask():
     app.run(host='0.0.0.0', port=8080)
 
+# Main entry point
 if __name__ == '__main__':
-    threading.Thread(target=start_flask, daemon=True).start()
-    webview.create_window("XARhub", f"http://{get_local_ip()}:8080/", confirm_close=True)
+    flask_thread = threading.Thread(target=start_flask)
+    flask_thread.daemon = True
+    flask_thread.start()
+
+    # Open the web app in a PyWebView window
+    webview.create_window(
+        "XARhub",
+        f"https://{get_local_ip()}:8080/",
+        confirm_close=True
+    )
     webview.start()
