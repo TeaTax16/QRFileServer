@@ -7,16 +7,28 @@ import io
 import base64
 import socket
 import webview
+import sys
 
-#region Initialise
-# make path to upload folder if it doesn't exist already
-upload_folder = r'uploads'
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+# Initialize paths
+upload_folder = resource_path('uploads')
 os.makedirs(upload_folder, exist_ok=True)
 
-app = Flask(__name__)
-# secret key for flash messages
+app = Flask(
+    __name__,
+    template_folder=resource_path('templates'),
+    static_folder=resource_path('static')
+)
 app.secret_key = 'your_secret_key'
-#endregion
 
 #region Functions
 def get_local_ip():
