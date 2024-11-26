@@ -8,24 +8,33 @@ import base64
 import socket
 import webview
 
-# Path to the uploads folder
+#region Initialise
+# make path to upload folder if it doesn't exist already
 upload_folder = r'uploads'
-
-# Ensure the uploads folder exists
 os.makedirs(upload_folder, exist_ok=True)
 
 app = Flask(__name__)
+# secret key for flash messages
 app.secret_key = 'your_secret_key'
+#endregion
 
-# Get the local network IP address of the host
+#region Functions
 def get_local_ip():
+    """Find the local network IP address."""
     hostname = socket.gethostname()
     try:
         return socket.gethostbyname(hostname)
     except socket.gaierror:
         return None
+    
+def start_flask():
+    """Start the Flask app."""
+    app.run(host='0.0.0.0', port=8080)
+#endregion
 
-# Flask routes
+#region Flask App Routes
+
+# Home/Upload page
 @app.route('/', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
@@ -56,11 +65,18 @@ def home():
             return jsonify(response), 400
     return render_template('home.html')
 
-@app.route('/download/<filename>', methods=['GET'])
-def download_file(filename):
-    filename = secure_filename(filename)
-    return send_from_directory(upload_folder, filename, as_attachment=True)
+# Files list page
+@app.route('/files', methods=['GET'])
+def files():
+    query = request.args.get('query', '').strip().lower()
+    all_files = os.listdir(upload_folder)
+    if query:
+        filtered_files = [f for f in all_files if query in f.lower()]
+    else:
+        filtered_files = all_files
+    return render_template('files.html', files=filtered_files, query=request.args.get('query', ''))
 
+# Generate and show QR code
 @app.route('/qr', methods=['GET'])
 def qr_code():
     filename = request.args.get('filename')
@@ -73,7 +89,7 @@ def qr_code():
     local_ip = get_local_ip()
     if not local_ip:
         return "Error: Could not determine local IP address.", 500
-    download_url = f"http://{local_ip}:8080/download/{filename}"  # Changed to http
+    download_url = f"http://{local_ip}:8080/download/{filename}"
     img = qrcode.make(download_url)
     buffer = io.BytesIO()
     img.save(buffer, format='PNG')
@@ -81,16 +97,13 @@ def qr_code():
     img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
     return jsonify({'qr_code': img_base64})
 
-@app.route('/files', methods=['GET'])
-def files():
-    query = request.args.get('query', '').strip().lower()
-    all_files = os.listdir(upload_folder)
-    if query:
-        filtered_files = [f for f in all_files if query in f.lower()]
-    else:
-        filtered_files = all_files
-    return render_template('files.html', files=filtered_files, query=request.args.get('query', ''))
+# Download file 
+@app.route('/download/<filename>', methods=['GET'])
+def download_file(filename):
+    filename = secure_filename(filename)
+    return send_from_directory(upload_folder, filename, as_attachment=True)
 
+# Delete files
 @app.route('/delete/<filename>', methods=['POST'])
 def delete_file(filename):
     filename = secure_filename(filename)
@@ -105,20 +118,16 @@ def delete_file(filename):
         flash(f'File "{filename}" does not exist.', 'warning')
     return redirect(url_for('files'))
 
-# Function to run Flask in a separate thread
-def start_flask():
-    app.run(host='0.0.0.0', port=8080)
+#endregion
 
-# Main entry point
 if __name__ == '__main__':
     flask_thread = threading.Thread(target=start_flask)
     flask_thread.daemon = True
     flask_thread.start()
 
-    # Open the web app in a PyWebView window
     webview.create_window(
         "XARhub",
-        f"https://{get_local_ip()}:8080/",
+        f"http://{get_local_ip()}:8080/",
         confirm_close=True
     )
     webview.start()
