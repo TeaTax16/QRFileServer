@@ -19,8 +19,15 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
-# Initialize paths
-upload_folder = resource_path('uploads')
+# Set the upload folder relative to the executable path
+if getattr(sys, 'frozen', False):
+    # If the application is run as a bundle (e.g. an .exe file)
+    app_base_path = os.path.dirname(sys.executable)
+else:
+    # If the application is run as a script
+    app_base_path = os.path.abspath(".")
+
+upload_folder = os.path.join(app_base_path, 'uploads')
 os.makedirs(upload_folder, exist_ok=True)
 
 app = Flask(
@@ -38,7 +45,7 @@ def get_local_ip():
         return socket.gethostbyname(hostname)
     except socket.gaierror:
         return None
-    
+
 def start_flask():
     """Start the Flask app."""
     app.run(host='0.0.0.0', port=8080)
