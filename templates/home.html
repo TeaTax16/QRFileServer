@@ -1,21 +1,24 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <!-- Head Contents -->
+    <!-- Meta Tags -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>XARhub Web App</title>
-    <!-- Bootstrap CSS (Local) -->
+
+    <!-- Bootstrap CSS -->
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
-    <!-- Include the styles.css file -->
+
+    <!-- Custom Styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body class="home-page">
 <div class="container">
     <div class="py-5 text-center">
-        <!-- Add the logo image here -->
+        <!-- Logo -->
         <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo-image">
         <h1>XARhub Web App</h1>
+
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -29,48 +32,52 @@
         {% endwith %}
     </div>
 
-    <!-- File upload section with drag and drop -->
+    <!-- File Upload Section -->
     <div class="card p-4 mb-4">
         <!-- Drag and Drop Area -->
         <div id="dropzone" class="dropzone mb-3">
             Drag and drop files here or click to upload files.
             <input type="file" name="file[]" id="dropzone-input" multiple>
         </div>
+
         <!-- Feedback Area -->
         <div id="upload-feedback" class="upload-feedback"></div>
+
         <!-- Navigation Buttons -->
         <div class="d-flex justify-content-center gap-3">
             <a href="/files" class="btn btn-main">View QR Codes</a>
-            <a href="/remote" class="btn btn-main">Create Remote Room</a> <!-- New Button Added -->
+            <a href="/remote" class="btn btn-main">Create Remote Room</a>
         </div>
     </div>
 
     <hr>
-
-    <!-- Removed Processing Status Section since processing is no longer needed -->
 </div>
 
-<!-- Bootstrap JS and dependencies -->
+<!-- Bootstrap JS Bundle -->
 <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+
+<!-- Custom JavaScript -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const dropzone = document.getElementById('dropzone');
         const dropzoneInput = document.getElementById('dropzone-input');
         const uploadFeedback = document.getElementById('upload-feedback');
 
-        // Highlight dropzone when file is dragged over
+        // Highlight dropzone on drag over
         dropzone.addEventListener('dragover', function (e) {
             e.preventDefault();
             e.stopPropagation();
             dropzone.classList.add('dragover');
         });
 
+        // Remove highlight when drag leaves
         dropzone.addEventListener('dragleave', function (e) {
             e.preventDefault();
             e.stopPropagation();
             dropzone.classList.remove('dragover');
         });
 
+        // Handle file drop
         dropzone.addEventListener('drop', function (e) {
             e.preventDefault();
             e.stopPropagation();
@@ -79,31 +86,28 @@
             handleFiles(files);
         });
 
-        // Open file dialog when dropzone is clicked
+        // Open file dialog on dropzone click
         dropzone.addEventListener('click', function () {
             dropzoneInput.click();
         });
 
-        // Handle files selected via dropzone input
+        // Handle file selection via input
         dropzoneInput.addEventListener('change', function () {
             const files = dropzoneInput.files;
             handleFiles(files);
         });
 
-        // Function to handle files
+        // Process selected files
         function handleFiles(files) {
-            if (files.length === 0) {
-                return;
-            }
+            if (files.length === 0) return;
             uploadFiles(files);
         }
 
-        // Function to upload files asynchronously
+        // Upload files asynchronously
         function uploadFiles(files) {
             const formData = new FormData();
-
-            for (let i = 0; i < files.length; i++) {
-                formData.append('file[]', files[i]);
+            for (let file of files) {
+                formData.append('file[]', file);
             }
 
             fetch('/', {
@@ -116,25 +120,30 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        uploadFeedback.innerHTML = `<div class="alert alert-success alert-dismissible fade show" role="alert">
-                        ${data.message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>`;
-                        // Optionally, reset the file input
+                        uploadFeedback.innerHTML = `
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                ${data.message}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
                         dropzoneInput.value = '';
                     } else {
-                        uploadFeedback.innerHTML = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        ${data.message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>`;
+                        uploadFeedback.innerHTML = `
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                ${data.message}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
                     }
                 })
                 .catch(error => {
                     console.error('Error uploading files:', error);
-                    uploadFeedback.innerHTML = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    An error occurred while uploading the files.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>`;
+                    uploadFeedback.innerHTML = `
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            An error occurred while uploading the files.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
                 });
         }
     });
