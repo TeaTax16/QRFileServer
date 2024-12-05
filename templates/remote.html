@@ -1,22 +1,19 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <!-- Meta Tags -->
+  <!-- Head Contents -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Remote Room</title>
-
-  <!-- Bootstrap CSS -->
+  <!-- Bootstrap CSS (Local) -->
   <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
-
-  <!-- Custom Styles -->
+  <!-- Include the styles.css file -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body class="remote-page">
 <div class="container">
   <div class="py-5 text-center">
     <h1>Remote Room Created</h1>
-
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
@@ -51,13 +48,13 @@
     </div>
   </div>
 
-  <!-- Back to Main Menu -->
   <div class="text-center">
+    <!-- Back to Main Menu button -->
     <a href="/" class="btn btn-outline">Back to Main Menu</a>
   </div>
 </div>
 
-<!-- Bootstrap JS Bundle -->
+<!-- Bootstrap JS and dependencies -->
 <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
 </body>
 </html>

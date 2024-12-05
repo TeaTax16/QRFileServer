@@ -1,22 +1,19 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <!-- Meta Tags -->
+    <!-- Head Contents -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Available Files</title>
-
-    <!-- Bootstrap CSS -->
+    <!-- Bootstrap CSS (Local) -->
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
-
-    <!-- Custom Styles -->
+    <!-- Include the styles.css file -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body class="files-page">
 <div class="container">
     <div class="py-5 text-center">
         <h1>Available Files for Download</h1>
-
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -41,7 +38,6 @@
         </form>
     </div>
 
-    <!-- Files List -->
     <div class="card p-4">
         <h2>Files</h2>
         {% if files %}
@@ -67,8 +63,8 @@
         {% endif %}
     </div>
 
-    <!-- Back to Main Menu -->
     <div class="text-center mt-4">
+        <!-- Back to Main Menu button -->
         <a href="/" class="btn btn-outline">Back to Main Menu</a>
     </div>
 
@@ -89,10 +85,8 @@
     </div>
 </div>
 
-<!-- Bootstrap JS Bundle -->
+<!-- Bootstrap JS and dependencies -->
 <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
-
-<!-- Custom JavaScript -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const qrCodeModal = new bootstrap.Modal(document.getElementById('qrCodeModal'));
@@ -100,7 +94,8 @@
         const qrCodeDescription = document.getElementById('qrCodeDescription');
 
         // Add event listeners to all Show QR buttons
-        document.querySelectorAll('.show-qr-btn').forEach(function(button) {
+        const showQrButtons = document.querySelectorAll('.show-qr-btn');
+        showQrButtons.forEach(function(button) {
             button.addEventListener('click', function() {
                 const filename = this.getAttribute('data-filename');
                 if (!filename) {
@@ -132,7 +127,7 @@
             });
         });
 
-        // Clear QR code image when modal is hidden
+        // Optional: Clear the QR code image when the modal is hidden
         document.getElementById('qrCodeModal').addEventListener('hidden.bs.modal', function () {
             qrCodeImage.src = '';
             qrCodeDescription.textContent = 'Scan this QR code to download the file.';
