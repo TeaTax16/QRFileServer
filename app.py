@@ -8,8 +8,6 @@ import base64
 import socket
 import webview
 import sys
-import random
-import string
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -38,9 +36,6 @@ app = Flask(
     static_folder=resource_path('static')
 )
 app.secret_key = 'your_secret_key'
-
-# In-memory storage for remote rooms
-remote_rooms = {}
 
 #region Functions
 def get_local_ip():
@@ -142,49 +137,6 @@ def delete_file(filename):
         flash(f'File "{filename}" does not exist.', 'warning')
     return redirect(url_for('files'))
 
-# New Remote Room route
-@app.route('/remote', methods=['GET'])
-def remote_room():
-    # Generate a random 6-character alphanumeric code
-    code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-
-    # Store the room information
-    remote_rooms[code] = {
-        'host_url': None,
-        'clients_url': None
-    }
-
-    # Define codes for host and clients with role suffixes
-    host_code = f"{code}/h"
-    client_code = f"{code}/c"
-
-    # Base64 encode the codes using URL-safe encoding and remove padding
-    encoded_host = base64.urlsafe_b64encode(host_code.encode()).decode().rstrip('=')
-    encoded_client = base64.urlsafe_b64encode(client_code.encode()).decode().rstrip('=')
-
-    # Generate simxar URLs
-    host_url = f"simxar://{encoded_host}"
-    clients_url = f"simxar://{encoded_client}"
-
-    # Update room information
-    remote_rooms[code]['host_url'] = host_url
-    remote_rooms[code]['clients_url'] = clients_url
-
-    # Create QR codes for the simxar URLs
-    host_qr = qrcode.make(host_url)
-    clients_qr = qrcode.make(clients_url)
-
-    # Convert QR codes to Base64 for embedding in HTML
-    buffer_host = io.BytesIO()
-    host_qr.save(buffer_host, format='PNG')
-    host_qr_base64 = base64.b64encode(buffer_host.getvalue()).decode('utf-8')
-
-    buffer_clients = io.BytesIO()
-    clients_qr.save(buffer_clients, format='PNG')
-    clients_qr_base64 = base64.b64encode(buffer_clients.getvalue()).decode('utf-8')
-
-    return render_template('remote.html', code=code, host_qr=host_qr_base64, clients_qr=clients_qr_base64)
-
 #endregion
 
 if __name__ == '__main__':
@@ -192,13 +144,9 @@ if __name__ == '__main__':
     flask_thread.daemon = True
     flask_thread.start()
 
-    local_ip = get_local_ip()
-    if not local_ip:
-        print("Error: Could not determine local IP address.")
-    else:
-        webview.create_window(
-            "XARhub",
-            f"http://{local_ip}:8080/",
-            confirm_close=True
-        )
-        webview.start()
+    webview.create_window(
+        "XARhub",
+        f"http://{get_local_ip()}:8080/",
+        confirm_close=True
+    )
+    webview.start()

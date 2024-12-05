@@ -1,4 +1,0 @@
-Flask
-Werkzeug
-qrcode[pil]
-pywebview

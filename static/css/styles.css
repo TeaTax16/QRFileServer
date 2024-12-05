@@ -1,8 +1,9 @@
-body.home-page,
-body.files-page,
-body.remote-page,
-body.remote-host-page,
-body.remote-clients-page {
+body.home-page {
+    background-color: #000000;
+    color: #FFFFFF;
+}
+
+body.files-page {
     background-color: #000000;
     color: #FFFFFF;
 }
@@ -124,15 +125,4 @@ input[type="checkbox"] {
 
 .upload-feedback {
     margin-top: 15px;
-}
-
-/* New class for white-colored QR code labels */
-.qr-label {
-    color: #FFFFFF; /* White color */
-    margin-bottom: 10px; /* Optional: Adds space below the label */
-}
-
-/* Existing .code-purple class */
-.code-purple {
-    color: #7049ce; /* Purple color matching btn-main */
 }
