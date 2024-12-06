@@ -13,7 +13,7 @@ from reportlab.lib.units import cm
 from flask import (
     Flask,
     send_from_directory,
-    send_file,  
+    send_file,
     jsonify,
     request,
     redirect,
@@ -40,7 +40,7 @@ def resource_path(relative_path):
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
     except AttributeError:
-        base_path = os.path.abspath(".")
+        base_path = os.path.abspath("")
 
     return os.path.join(base_path, relative_path)
 
@@ -50,7 +50,7 @@ if getattr(sys, 'frozen', False):
     app_base_path = os.path.dirname(sys.executable)
 else:
     # Running as a standard script
-    app_base_path = os.path.abspath(".")
+    app_base_path = os.path.abspath("")
 
 # Setup upload folder
 UPLOAD_FOLDER = os.path.join(app_base_path, UPLOAD_FOLDER_NAME)
@@ -94,7 +94,14 @@ def start_flask():
 @app.route('/', methods=['GET', 'POST'])
 def home():
     """
-    Home page that handles file uploads.
+    Home page that displays the main navigation.
+    """
+    return render_template('home.html')
+
+@app.route('/files', methods=['GET', 'POST'])
+def files():
+    """
+    Display a list of uploaded files with upload functionality.
     """
     if request.method == 'POST':
         if 'file[]' not in request.files:
@@ -125,18 +132,11 @@ def home():
                 return jsonify(response), 200
             else:
                 flash(message, 'success')
-                return redirect(url_for('home'))
+                return redirect(url_for('files'))
         else:
             response = {'status': 'error', 'message': 'No valid files were uploaded.'}
             return jsonify(response), 400
 
-    return render_template('home.html')
-
-@app.route('/files', methods=['GET'])
-def files():
-    """
-    Display a list of uploaded files with search functionality.
-    """
     query = request.args.get('query', '').strip().lower()
     all_files = os.listdir(app.config['UPLOAD_FOLDER'])
     if query:
@@ -144,6 +144,20 @@ def files():
     else:
         filtered_files = all_files
     return render_template('files.html', files=filtered_files, query=request.args.get('query', ''))
+
+@app.route('/webrtc')
+def webrtc():
+    """
+    Placeholder page for WebRTC.
+    """
+    return render_template('webrtc.html')
+
+@app.route('/segmentation')
+def segmentation():
+    """
+    Placeholder page for Segmentation.
+    """
+    return render_template('segmentation.html')
 
 @app.route('/qr', methods=['GET'])
 def qr_code():
@@ -241,7 +255,7 @@ def remote_room():
         pdf_canvas = canvas.Canvas(output_path, pagesize=A4)
 
         # Dimensions
-        qr_size = 12 * cm  # Define size of QR code (17 cm square)
+        qr_size = 12 * cm  # Define size of QR code (12 cm square)
         x_qr, y_qr = (A4[0] - qr_size) / 2, (A4[1] - qr_size) / 2  # Center the QR code
 
         # Draw the logo at the top
@@ -275,45 +289,6 @@ def remote_room():
         'remote.html',
         code=code
     )
-
-
-# =======================
-# New Route for Downloading QR Codes
-# =======================
-
-@app.route('/download_qr/<code>/<role>', methods=['GET'])
-def download_qr(code, role):
-    """
-    Download the QR code image for the specified remote room and role.
-    """
-    # Sanitize and format the code
-    code = secure_filename(code).upper()
-    role = role.lower()
-
-    # Validate the room code
-    if code not in remote_rooms:
-        return "Error: Invalid room code.", 404
-
-    # Determine the filename based on the role
-    if role == 'host':
-        filename = f"{code}_host_qr.png"
-    elif role == 'client':
-        filename = f"{code}_clients_qr.png"
-    else:
-        return "Error: Invalid role specified. Use 'host' or 'client'.", 400
-
-    file_path = os.path.join(CODES_FOLDER, filename)
-    if not os.path.exists(file_path):
-        return "Error: QR code does not exist.", 404
-
-    # Send the file as a downloadable attachment
-    return send_file(
-        file_path,
-        mimetype='image/png',
-        as_attachment=True,
-        download_name=filename
-    )
-
 
 # =======================
 # Application Entry Point

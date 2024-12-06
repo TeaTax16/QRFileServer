@@ -32,25 +32,58 @@
         {% endwith %}
     </div>
 
-    <!-- File Upload Section -->
-    <div class="card p-4 mb-4">
-        <!-- Drag and Drop Area -->
-        <div id="dropzone" class="dropzone mb-3">
-            Drag and drop files here or click to upload files.
-            <input type="file" name="file[]" id="dropzone-input" multiple>
+    <!-- Main Navigation in 2x2 Grid -->
+    <div class="row">
+        <!-- First Row -->
+        <div class="col-md-6 mb-4">
+            <div class="card section-card h-100">
+                <div class="card-body text-center">
+                    <a href="/webrtc" class="text-decoration-none text-white">
+                        <h2 class="card-title">WebRTC</h2>
+                    </a>
+                    <p class="card-text">Connect seamlessly using WebRTC technology. Placeholder for future implementation.</p>
+                </div>
+            </div>
         </div>
 
-        <!-- Feedback Area -->
-        <div id="upload-feedback" class="upload-feedback"></div>
-
-        <!-- Navigation Buttons -->
-        <div class="d-flex justify-content-center gap-3">
-            <a href="/files" class="btn btn-main">View QR Codes</a>
-            <a href="/remote" class="btn btn-main">Create Remote Room</a>
+        <div class="col-md-6 mb-4">
+            <div class="card section-card h-100">
+                <div class="card-body text-center">
+                    <a href="/files" class="text-decoration-none text-white">
+                        <h2 class="card-title">File Loading</h2>
+                    </a>
+                    <p class="card-text">Easily upload and manage your files with our intuitive drag-and-drop interface.</p>
+                </div>
+            </div>
         </div>
     </div>
 
-    <hr>
+    <div class="row">
+        <!-- Second Row -->
+        <div class="col-md-6 mb-4">
+            <div class="card section-card h-100">
+                <div class="card-body text-center">
+                    <a href="/remote" class="text-decoration-none text-white">
+                        <h2 class="card-title">Remote Rooms</h2>
+                    </a>
+                    <p class="card-text">Create and join remote rooms to collaborate with others in real-time.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card section-card h-100">
+                <div class="card-body text-center">
+                    <a href="/segmentation" class="text-decoration-none text-white">
+                        <h2 class="card-title">Segmentation</h2>
+                    </a>
+                    <p class="card-text">Advanced segmentation tools coming soon. Stay tuned for more features.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="mt-5">
 </div>
 
 <!-- Bootstrap JS Bundle -->
@@ -58,95 +91,7 @@
 
 <!-- Custom JavaScript -->
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const dropzone = document.getElementById('dropzone');
-        const dropzoneInput = document.getElementById('dropzone-input');
-        const uploadFeedback = document.getElementById('upload-feedback');
-
-        // Highlight dropzone on drag over
-        dropzone.addEventListener('dragover', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            dropzone.classList.add('dragover');
-        });
-
-        // Remove highlight when drag leaves
-        dropzone.addEventListener('dragleave', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            dropzone.classList.remove('dragover');
-        });
-
-        // Handle file drop
-        dropzone.addEventListener('drop', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            dropzone.classList.remove('dragover');
-            const files = e.dataTransfer.files;
-            handleFiles(files);
-        });
-
-        // Open file dialog on dropzone click
-        dropzone.addEventListener('click', function () {
-            dropzoneInput.click();
-        });
-
-        // Handle file selection via input
-        dropzoneInput.addEventListener('change', function () {
-            const files = dropzoneInput.files;
-            handleFiles(files);
-        });
-
-        // Process selected files
-        function handleFiles(files) {
-            if (files.length === 0) return;
-            uploadFiles(files);
-        }
-
-        // Upload files asynchronously
-        function uploadFiles(files) {
-            const formData = new FormData();
-            for (let file of files) {
-                formData.append('file[]', file);
-            }
-
-            fetch('/', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        uploadFeedback.innerHTML = `
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                ${data.message}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        `;
-                        dropzoneInput.value = '';
-                    } else {
-                        uploadFeedback.innerHTML = `
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                ${data.message}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        `;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error uploading files:', error);
-                    uploadFeedback.innerHTML = `
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            An error occurred while uploading the files.
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    `;
-                });
-        }
-    });
+    // Any additional JavaScript can be added here
 </script>
 </body>
 </html>

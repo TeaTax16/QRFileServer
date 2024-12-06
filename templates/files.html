@@ -4,7 +4,7 @@
     <!-- Meta Tags -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Available Files</title>
+    <title>File Loading</title>
 
     <!-- Bootstrap CSS -->
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
@@ -13,9 +13,17 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body class="files-page">
+<!-- Navigation Bar -->
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="/">XARhub</a>
+        <a href="/" class="btn btn-outline">Back to Home</a>
+    </div>
+</nav>
+
 <div class="container">
-    <div class="py-5 text-center">
-        <h1>Available Files for Download</h1>
+    <div class="py-3 text-center">
+        <h1>File Loading</h1>
 
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -30,46 +38,49 @@
         {% endwith %}
     </div>
 
-    <!-- Search Form -->
+    <!-- File Upload Section -->
     <div class="card p-4 mb-4">
-        <form method="get" action="{{ url_for('files') }}" class="d-flex">
-            <input type="text" name="query" class="form-control me-2" placeholder="Search files..." value="{{ query }}">
-            <button type="submit" class="btn btn-main">Search</button>
-            {% if query %}
-            <a href="{{ url_for('files') }}" class="btn btn-outline ms-2">Clear</a>
-            {% endif %}
-        </form>
+        <!-- Drag and Drop Area -->
+        <div id="dropzone" class="dropzone mb-3">
+            Drag and drop files here or click to upload files.
+            <input type="file" name="file[]" id="dropzone-input" multiple>
+        </div>
+
+        <!-- Feedback Area -->
+        <div id="upload-feedback" class="upload-feedback"></div>
     </div>
 
-    <!-- Files List -->
+    <!-- Files List Section -->
     <div class="card p-4">
-        <h2>Files</h2>
+        <h2>Uploaded Files</h2>
         {% if files %}
         <ul class="list-group">
             {% for file in files %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                {{ file }}
-                <div>
-                    <button type="button" class="btn btn-main btn-sm me-2 show-qr-btn" data-filename="{{ file }}">
-                        Show QR
-                    </button>
-                    <form method="post" action="{{ url_for('delete_file', filename=file) }}" class="d-inline">
-                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this file?');">
-                            Delete
+            <li class="list-group-item">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        {{ file }}
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <button type="button" class="btn btn-main btn-sm me-2 show-qr-btn" data-filename="{{ file }}">
+                            Show QR
                         </button>
-                    </form>
+                        <form method="post" action="{{ url_for('delete_file', filename=file) }}" class="d-inline">
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this file?');">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </li>
+            {% if not loop.last %}
+            <hr class="mt-2 mb-2 border-purple">
+            {% endif %}
             {% endfor %}
         </ul>
         {% else %}
         <p>No files available for download.</p>
         {% endif %}
-    </div>
-
-    <!-- Back to Main Menu -->
-    <div class="text-center mt-4">
-        <a href="/" class="btn btn-outline">Back to Main Menu</a>
     </div>
 
     <!-- QR Code Modal -->
@@ -95,6 +106,98 @@
 <!-- Custom JavaScript -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const dropzone = document.getElementById('dropzone');
+        const dropzoneInput = document.getElementById('dropzone-input');
+        const uploadFeedback = document.getElementById('upload-feedback');
+
+        // Highlight dropzone on drag over
+        dropzone.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.add('dragover');
+        });
+
+        // Remove highlight when drag leaves
+        dropzone.addEventListener('dragleave', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.remove('dragover');
+        });
+
+        // Handle file drop
+        dropzone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        // Open file dialog on dropzone click
+        dropzone.addEventListener('click', function () {
+            dropzoneInput.click();
+        });
+
+        // Handle file selection via input
+        dropzoneInput.addEventListener('change', function () {
+            const files = dropzoneInput.files;
+            handleFiles(files);
+        });
+
+        // Process selected files
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            uploadFiles(files);
+        }
+
+        // Upload files asynchronously
+        function uploadFiles(files) {
+            const formData = new FormData();
+            for (let file of files) {
+                formData.append('file[]', file);
+            }
+
+            fetch('/files', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        uploadFeedback.innerHTML = `
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                ${data.message}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
+                        // Reload the page to show the new files
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        uploadFeedback.innerHTML = `
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                ${data.message}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error uploading files:', error);
+                    uploadFeedback.innerHTML = `
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            An error occurred while uploading the files.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                });
+        }
+
+        // QR Code Modal Handling
         const qrCodeModal = new bootstrap.Modal(document.getElementById('qrCodeModal'));
         const qrCodeImage = document.getElementById('qrCodeImage');
         const qrCodeDescription = document.getElementById('qrCodeDescription');

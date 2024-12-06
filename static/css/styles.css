@@ -2,8 +2,8 @@
 body.home-page,
 body.files-page,
 body.remote-page,
-body.remote-host-page,
-body.remote-clients-page {
+body.webrtc-page,
+body.segmentation-page {
     background-color: #000000;
     color: #FFFFFF;
 }
@@ -59,6 +59,18 @@ body.remote-clients-page {
 .card {
     background-color: #191919;
     border: 1px solid #7049ce;
+    box-shadow: 0 4px 8px rgba(112, 73, 206, 0.2);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(112, 73, 206, 0.3);
+}
+
+/* Section Card Specific Styles */
+.section-card {
+    border-radius: 10px;
 }
 
 /* List Group Item Styles */
@@ -91,6 +103,16 @@ body.remote-clients-page {
 /* Heading and Text Styles */
 h1, h2, strong {
     color: #FFFFFF;
+}
+
+/* Text Color Utility */
+.text-white {
+    color: #FFFFFF !important;
+}
+
+/* Modify .text-purple Class to White */
+.text-purple {
+    color: #FFFFFF !important;
 }
 
 /* Close Button Styles */
@@ -150,4 +172,21 @@ input[type="checkbox"] {
 /* Code Display Styles */
 .code-purple {
     color: #7049ce; /* Purple color matching btn-main */
+}
+
+/* Section Column Styles */
+.section-column {
+    padding: 20px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 767.98px) {
+    .section-card {
+        margin-bottom: 20px;
+    }
+}
+
+/* Ensure Description Text is White */
+.card-text {
+    color: #FFFFFF;
 }
