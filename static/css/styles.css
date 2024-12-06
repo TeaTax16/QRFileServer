@@ -1,13 +1,14 @@
-body.home-page {
+/* General Page Styles */
+body.home-page,
+body.files-page,
+body.remote-page,
+body.remote-host-page,
+body.remote-clients-page {
     background-color: #000000;
     color: #FFFFFF;
 }
 
-body.files-page {
-    background-color: #000000;
-    color: #FFFFFF;
-}
-
+/* Primary Button Styles */
 .btn-main {
     background-color: #7049ce;
     color: #FFFFFF;
@@ -21,6 +22,7 @@ body.files-page {
     border: 1px solid #7049ce;
 }
 
+/* Outline Button Styles */
 .btn-outline {
     background-color: #191919;
     color: #FFFFFF;
@@ -34,11 +36,12 @@ body.files-page {
     border: none;
 }
 
+/* Danger Button Styles */
 .btn-danger {
     background-color: #dc3545;
     color: #FFFFFF;
     border: none;
-    transition: background-color 0.3s, border 0.3s;
+    transition: background-color 0.3s;
 }
 
 .btn-danger:hover {
@@ -47,21 +50,25 @@ body.files-page {
     border: none;
 }
 
+/* Form Label Styles */
 .form-label {
     color: #FFFFFF;
 }
 
+/* Card Styles */
 .card {
     background-color: #191919;
     border: 1px solid #7049ce;
 }
 
+/* List Group Item Styles */
 .list-group-item {
     background-color: #191919;
     color: #FFFFFF;
     border: none;
 }
 
+/* Alert Styles */
 .alert {
     border-radius: 0.25rem;
 }
@@ -81,29 +88,35 @@ body.files-page {
     color: #000000;
 }
 
+/* Heading and Text Styles */
 h1, h2, strong {
     color: #FFFFFF;
 }
 
+/* Close Button Styles */
 .btn-close {
     filter: invert(1);
 }
 
+/* Checkbox Styles */
 input[type="checkbox"] {
     accent-color: #7049ce;
 }
 
+/* Logo Image Styles */
 .logo-image {
-    max-width: 150px; /* Adjust the max-width as needed */
+    max-width: 150px; /* Adjust as needed */
     height: auto;
     margin-bottom: 20px;
 }
 
+/* Modal Content Styles */
 .modal-content {
     background-color: #191919;
     color: #FFFFFF;
 }
 
+/* Dropzone Styles */
 .dropzone {
     border: 2px dashed #7049ce;
     border-radius: 5px;
@@ -123,6 +136,18 @@ input[type="checkbox"] {
     display: none;
 }
 
+/* Upload Feedback Styles */
 .upload-feedback {
     margin-top: 15px;
+}
+
+/* QR Code Label Styles */
+.qr-label {
+    color: #FFFFFF; /* White color */
+    margin-bottom: 10px; /* Space below the label */
+}
+
+/* Code Display Styles */
+.code-purple {
+    color: #7049ce; /* Purple color matching btn-main */
 }
