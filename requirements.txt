@@ -1,0 +1,6 @@
+Flask
+reportlab
+Pillow
+qrcode
+pywebview
+werkzeug
