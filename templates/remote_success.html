@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Meta Tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remote Room Created - XARhub</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body class="remote-page">
+<!-- Navigation Bar -->
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="/">XARhub</a>
+        <a href="/" class="btn btn-outline">Back to Home</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="py-5 text-center">
+        <h1>Remote Room Created</h1>
+        <p class="lead text-white">Share this code with others to join your remote room.</p>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Remote Room Code -->
+    <div class="card p-4 mb-4 text-center">
+        <h2>Your Remote Room Code</h2>
+        <p class="display-4 code-purple">{{ code }}</p>
+        <p class="mt-3 text-white">Use this code to share and collaborate remotely.</p>
+    </div>
+
+    <!-- QR Codes Generated Message -->
+    <div class="card p-4 mb-4 text-center">
+        <h2 class="text-white">QR Codes Generated</h2>
+        <p class="text-white">The QR codes for the host and clients have been generated and stored in the <code>codes</code> folder on the server.</p>
+        <p class="text-white">You can access them directly from the server as needed.</p>
+    </div>
+</div>
+
+<!-- Bootstrap JS Bundle -->
+<script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+
+<!-- Custom JavaScript -->
+<script>
+    // Any additional JavaScript can be added here
+</script>
+</body>
+</html>

@@ -3,7 +3,8 @@ body.home-page,
 body.files-page,
 body.remote-page,
 body.webrtc-page,
-body.segmentation-page {
+body.segmentation-page,
+body.codes-page {
     background-color: #000000;
     color: #FFFFFF;
 }

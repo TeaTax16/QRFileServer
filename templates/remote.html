@@ -4,7 +4,7 @@
     <!-- Meta Tags -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Remote Room - XARhub</title>
+    <title>Create Remote Room - XARhub</title>
 
     <!-- Bootstrap CSS -->
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
@@ -23,19 +23,83 @@
 
 <div class="container">
     <div class="py-5 text-center">
-        <h1>Remote Room Created</h1>
-        <p class="lead">Share this code with others to join your remote room.</p>
+        <h1>Create Remote Room</h1>
+        <p class="lead">Enter the names of the clients you wish to invite to your remote room.</p>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
     </div>
 
-    <!-- Remote Room Code -->
-    <div class="card p-4 mb-4 text-center">
-        <h2>Your Remote Room Code</h2>
-        <p class="display-4 code-purple">{{ code }}</p>
-        <p class="mt-3">Use this code to share and collaborate remotely.</p>
-    </div>
+    <!-- Client Names Form -->
+    <form method="POST" action="{{ url_for('remote_room') }}">
+        <div class="card p-4 mb-4">
+            <h2>Client Names</h2>
+            <div id="clients-container">
+                <!-- Client input fields will be appended here -->
+            </div>
+            <!-- + New Client Button -->
+            <div class="text-center mt-3">
+                <button type="button" class="btn btn-main btn-sm" id="add-client-btn">+ New Client</button>
+            </div>
+        </div>
+
+        <!-- Generate QR Codes Button -->
+        <div class="text-center">
+            <button type="submit" class="btn btn-main btn-lg">Generate QR Codes</button>
+        </div>
+    </form>
 </div>
 
 <!-- Bootstrap JS Bundle -->
 <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+
+<!-- Custom JavaScript -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const clientsContainer = document.getElementById('clients-container');
+        const addClientBtn = document.getElementById('add-client-btn');
+
+        // Function to add a new client input field with a remove button
+        function addClientField() {
+            const clientDiv = document.createElement('div');
+            clientDiv.className = 'row mb-3 align-items-center client-row';
+
+            clientDiv.innerHTML = `
+                <div class="col-md-10">
+                    <input type="text" name="client_names[]" class="form-control" placeholder="Enter client name" required>
+                </div>
+                <div class="col-md-2 text-center">
+                    <button type="button" class="btn btn-danger btn-sm remove-client-btn">Remove</button>
+                </div>
+            `;
+
+            clientsContainer.appendChild(clientDiv);
+        }
+
+        // Event listener for adding new client fields
+        addClientBtn.addEventListener('click', function () {
+            addClientField();
+        });
+
+        // Event delegation for removing client fields
+        clientsContainer.addEventListener('click', function (e) {
+            if (e.target && e.target.matches('.remove-client-btn')) {
+                const clientRow = e.target.closest('.client-row');
+                if (clientRow) {
+                    clientRow.remove();
+                }
+            }
+        });
+    });
+</script>
 </body>
 </html>

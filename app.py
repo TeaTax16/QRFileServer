@@ -9,6 +9,7 @@ import io
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
+from PIL import Image  # Ensure Pillow is installed
 
 from flask import (
     Flask,
@@ -210,85 +211,123 @@ def delete_file(filename):
         flash(f'File "{filename}" does not exist.', 'warning')
     return redirect(url_for('files'))
 
-@app.route('/remote', methods=['GET'])
+@app.route('/remote', methods=['GET', 'POST'])
 def remote_room():
     """
     Create a new remote room with unique codes and QR codes.
+    Handles both displaying the client input form and processing the submitted client names.
     """
-    # Generate a random 6-character alphanumeric code
-    code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    if request.method == 'POST':
+        # Retrieve client names from the form
+        client_names = request.form.getlist('client_names[]')
+        # Clean client names: remove empty names and strip whitespace
+        client_names = [name.strip() for name in client_names if name.strip()]
 
-    # Initialize room information
-    remote_rooms[code] = {
-        'host_url': None,
-        'clients_url': None
-    }
+        if not client_names:
+            flash('Please enter at least one client name.', 'warning')
+            return redirect(url_for('remote_room'))
 
-    # Define role-specific codes
-    host_code = f"{code}/h"
-    client_code = f"{code}/c"
+        # Generate a random 6-character alphanumeric code
+        code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
-    # Encode codes using URL-safe Base64 without padding
-    encoded_host = base64.urlsafe_b64encode(host_code.encode()).decode().rstrip('=')
-    encoded_client = base64.urlsafe_b64encode(client_code.encode()).decode().rstrip('=')
+        # Initialize room information
+        remote_rooms[code] = {
+            'host_url': None,
+            'clients_url': []
+        }
 
-    # Generate simxar URLs
-    host_url = f"simxar://{encoded_host}"
-    clients_url = f"simxar://{encoded_client}"
+        # Define role-specific codes
+        host_code = f"{code}/h"
 
-    # Update room information
-    remote_rooms[code]['host_url'] = host_url
-    remote_rooms[code]['clients_url'] = clients_url
+        # Encode host code using URL-safe Base64 without padding
+        encoded_host = base64.urlsafe_b64encode(host_code.encode()).decode().rstrip('=')
 
-    # Generate QR code images
-    host_qr = qrcode.make(host_url)
-    clients_qr = qrcode.make(clients_url)
+        # Generate simxar URL for host
+        host_url = f"simxar://{encoded_host}"
 
-    # Save QR codes as PDFs with logo and label
-    host_pdf_path = os.path.join(CODES_FOLDER, f"{code}_host_qr.pdf")
-    clients_pdf_path = os.path.join(CODES_FOLDER, f"{code}_clients_qr.pdf")
+        # Update room information
+        remote_rooms[code]['host_url'] = host_url
 
-    logo_path = os.path.join(app.static_folder, 'media/simxar.png')
+        # Generate QR code for host
+        host_qr = qrcode.make(host_url)
 
-    def save_qr_as_pdf(qr_image, output_path, role_label):
-        """Helper function to save QR code to a PDF with logo and role label."""
-        pdf_canvas = canvas.Canvas(output_path, pagesize=A4)
+        # Generate QR codes for each client
+        client_qrs = []
+        for client_name in client_names:
+            client_code = f"{code}/c/{client_name}"
+            encoded_client = base64.urlsafe_b64encode(client_code.encode()).decode().rstrip('=')
+            client_url = f"simxar://{encoded_client}"
+            remote_rooms[code]['clients_url'].append(client_url)
+            client_qr = qrcode.make(client_url)
+            client_qrs.append((client_name, client_qr))
 
-        # Dimensions
-        qr_size = 17 * cm 
-        x_qr, y_qr = (A4[0] - qr_size) / 2, ((A4[1] - qr_size) / 2) - 1 * cm
+        # Generate PDFs for host and clients
+        host_pdf_path = os.path.join(CODES_FOLDER, f"{code}_host_qr.pdf")
+        client_pdf_paths = []
 
-        # Draw the logo at the top
-        logo_width = 10 * cm
-        logo_height = 10 * cm
-        x_logo = (A4[0] - logo_width) / 2
-        y_logo = A4[1] - logo_height - 1 * cm
-        pdf_canvas.drawImage(logo_path, x_logo, y_logo, logo_width, logo_height, preserveAspectRatio=True)
+        logo_path = os.path.join(app.static_folder, 'media/simxar.png')
 
-        # Save QR code as a temporary PNG and draw it
-        qr_image = qr_image.resize((int(qr_size), int(qr_size)))  # Ensure consistent size
-        qr_image.save("temp_qr.png")
-        pdf_canvas.drawImage("temp_qr.png", x_qr, y_qr, qr_size, qr_size)
-        os.remove("temp_qr.png")  # Clean up temporary file
+        def save_qr_as_pdf(qr_image, output_path, role_label, client_name=None):
+            """Helper function to save QR code to a PDF with logo and role label."""
+            pdf_canvas = canvas.Canvas(output_path, pagesize=A4)
 
-        # Add label below the QR code
-        pdf_canvas.setFont("Helvetica-Bold", 24)
-        text_x = A4[0] / 2
-        text_y = y_qr - 2 * cm  # Position below the QR code
-        pdf_canvas.drawCentredString(text_x, text_y, role_label)
+            # Dimensions
+            qr_size = 17 * cm
+            x_qr, y_qr = (A4[0] - qr_size) / 2, ((A4[1] - qr_size) / 2) - 1 * cm
 
-        # Finalize the page
-        pdf_canvas.showPage()
-        pdf_canvas.save()
+            # Draw the logo at the top
+            logo_width = 10 * cm
+            logo_height = 10 * cm
+            x_logo = (A4[0] - logo_width) / 2
+            y_logo = A4[1] - logo_height - 1 * cm
+            pdf_canvas.drawImage(logo_path, x_logo, y_logo, logo_width, logo_height, preserveAspectRatio=True)
 
-    # Generate PDFs
-    save_qr_as_pdf(host_qr, host_pdf_path, "Host")
-    save_qr_as_pdf(clients_qr, clients_pdf_path, "Client")
+            # Save QR code as a temporary PNG and draw it
+            qr_temp_path = "temp_qr.png"
+            qr_image = qr_image.resize((int(qr_size), int(qr_size)))  # Ensure consistent size
+            qr_image.save(qr_temp_path)
+            pdf_canvas.drawImage(qr_temp_path, x_qr, y_qr, qr_size, qr_size)
+            os.remove(qr_temp_path)  # Clean up temporary file
 
-    return render_template(
-        'remote.html',
-        code=code
-    )
+            # Add label below the QR code
+            pdf_canvas.setFont("Helvetica-Bold", 24)
+            if client_name:
+                label = f"{role_label} - {client_name}"
+            else:
+                label = role_label
+            text_x = A4[0] / 2
+            text_y = y_qr - 2 * cm  # Position below the QR code
+            pdf_canvas.drawCentredString(text_x, text_y, label)
+
+            # Finalize the page
+            pdf_canvas.showPage()
+            pdf_canvas.save()
+
+        # Generate host PDF
+        save_qr_as_pdf(host_qr, host_pdf_path, "Host")
+
+        # Generate client PDFs
+        for client_name, client_qr in client_qrs:
+            client_pdf_path = os.path.join(CODES_FOLDER, f"{code}_client_{client_name}_qr.pdf")
+            save_qr_as_pdf(client_qr, client_pdf_path, "Client", client_name=client_name)
+            client_pdf_paths.append(client_pdf_path)
+
+        flash(f'Remote room "{code}" created successfully with {len(client_qrs)} client(s). QR codes have been generated and stored.', 'success')
+        return render_template(
+            'remote_success.html',
+            code=code
+        )
+
+    # For GET request, render the client input form
+    return render_template('remote.html')
+
+@app.route('/codes/<filename>', methods=['GET'])
+def get_code_file(filename):
+    """
+    Serve QR code PDF files from the codes folder.
+    """
+    filename = secure_filename(filename)
+    return send_from_directory(CODES_FOLDER, filename, as_attachment=False)
 
 # =======================
 # Application Entry Point
