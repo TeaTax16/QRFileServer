@@ -248,21 +248,21 @@ def remote_room():
     host_pdf_path = os.path.join(CODES_FOLDER, f"{code}_host_qr.pdf")
     clients_pdf_path = os.path.join(CODES_FOLDER, f"{code}_clients_qr.pdf")
 
-    logo_path = os.path.join(app.static_folder, 'logo.png')  # Path to logo in static folder
+    logo_path = os.path.join(app.static_folder, 'media/simxar.png')
 
     def save_qr_as_pdf(qr_image, output_path, role_label):
         """Helper function to save QR code to a PDF with logo and role label."""
         pdf_canvas = canvas.Canvas(output_path, pagesize=A4)
 
         # Dimensions
-        qr_size = 12 * cm  # Define size of QR code (12 cm square)
-        x_qr, y_qr = (A4[0] - qr_size) / 2, (A4[1] - qr_size) / 2  # Center the QR code
+        qr_size = 17 * cm 
+        x_qr, y_qr = (A4[0] - qr_size) / 2, ((A4[1] - qr_size) / 2) - 1 * cm
 
         # Draw the logo at the top
-        logo_width = 5 * cm
-        logo_height = 5 * cm
+        logo_width = 10 * cm
+        logo_height = 10 * cm
         x_logo = (A4[0] - logo_width) / 2
-        y_logo = A4[1] - logo_height - 2 * cm
+        y_logo = A4[1] - logo_height - 1 * cm
         pdf_canvas.drawImage(logo_path, x_logo, y_logo, logo_width, logo_height, preserveAspectRatio=True)
 
         # Save QR code as a temporary PNG and draw it
@@ -272,7 +272,7 @@ def remote_room():
         os.remove("temp_qr.png")  # Clean up temporary file
 
         # Add label below the QR code
-        pdf_canvas.setFont("Helvetica-Bold", 14)
+        pdf_canvas.setFont("Helvetica-Bold", 24)
         text_x = A4[0] / 2
         text_y = y_qr - 2 * cm  # Position below the QR code
         pdf_canvas.drawCentredString(text_x, text_y, role_label)
