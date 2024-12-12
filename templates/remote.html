@@ -24,7 +24,7 @@
 <div class="container">
     <div class="py-5 text-center">
         <h1>Create Remote Room</h1>
-        <p class="lead">Enter the names of the clients you wish to invite to your remote room.</p>
+        <p class="lead">Enter the names and emails of the clients you wish to invite to your remote room.</p>
 
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -39,10 +39,10 @@
         {% endwith %}
     </div>
 
-    <!-- Client Names Form -->
+    <!-- Client Form -->
     <form method="POST" action="{{ url_for('remote.remote_room') }}">
         <div class="card p-4 mb-4">
-            <h2>Client Names</h2>
+            <h2>Clients</h2>
             <div id="clients-container">
                 <!-- Client input fields will be appended here -->
             </div>
@@ -74,8 +74,11 @@
             clientDiv.className = 'row mb-3 align-items-center client-row';
 
             clientDiv.innerHTML = `
-                <div class="col-md-10">
-                    <input type="text" name="client_names[]" class="form-control" placeholder="Enter client name" required>
+                <div class="col-md-4">
+                    <input type="text" name="client_names[]" class="form-control" placeholder="Client name" required>
+                </div>
+                <div class="col-md-6">
+                    <input type="email" name="client_emails[]" class="form-control" placeholder="Client email" required>
                 </div>
                 <div class="col-md-2 text-center">
                     <button type="button" class="btn btn-danger btn-sm remove-client-btn">Remove</button>
@@ -84,6 +87,9 @@
 
             clientsContainer.appendChild(clientDiv);
         }
+
+        // Add the first client field on load for convenience
+        addClientField();
 
         // Event listener for adding new client fields
         addClientBtn.addEventListener('click', function () {

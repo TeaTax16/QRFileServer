@@ -3,6 +3,8 @@ import base64
 import random
 import string
 import io
+import re
+import hashlib
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
@@ -15,15 +17,28 @@ from werkzeug.utils import secure_filename
 
 remote_bp = Blueprint('remote', __name__)
 
+# Simple regex to validate emails. You can adjust this if needed.
+EMAIL_REGEX = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
+
 @remote_bp.route('/remote', methods=['GET', 'POST'])
 def remote_room():
     if request.method == 'POST':
+        # Get client names and emails
         client_names = request.form.getlist('client_names[]')
-        client_names = [name.strip() for name in client_names if name.strip()]
+        client_emails = request.form.getlist('client_emails[]')
 
-        if not client_names:
-            flash('Please enter at least one client name.', 'warning')
+        # Clean up names (strip whitespace)
+        clients = [(name.strip(), email.strip()) for name, email in zip(client_names, client_emails) if name.strip()]
+
+        if not clients:
+            flash('Please enter at least one client with a name.', 'warning')
             return redirect(url_for('remote.remote_room'))
+
+        # Validate emails
+        for _, email in clients:
+            if not EMAIL_REGEX.match(email):
+                flash(f'Invalid email format: {email}', 'warning')
+                return redirect(url_for('remote.remote_room'))
 
         code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
         current_app.remote_rooms[code] = {
@@ -39,8 +54,10 @@ def remote_room():
         host_qr = qrcode.make(host_url)
 
         client_qrs = []
-        for client_name in client_names:
-            client_code = f"{code}/c/{client_name}"
+        for client_name, client_email in clients:
+            # Hash the email
+            hashed_email = hashlib.sha256(client_email.lower().encode()).hexdigest()
+            client_code = f"{code}/c/{client_name}/{hashed_email}"
             encoded_client = base64.urlsafe_b64encode(client_code.encode()).decode().rstrip('=')
             client_url = f"simxar://{encoded_client}"
             current_app.remote_rooms[code]['clients_url'].append(client_url)
