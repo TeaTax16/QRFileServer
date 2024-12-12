@@ -65,7 +65,7 @@
                         <button type="button" class="btn btn-main btn-sm me-2 show-qr-btn" data-filename="{{ file }}">
                             Show QR
                         </button>
-                        <form method="post" action="{{ url_for('delete_file', filename=file) }}" class="d-inline">
+                        <form method="post" action="{{ url_for('files.delete_file', filename=file) }}" class="d-inline">
                             <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this file?');">
                                 Delete
                             </button>

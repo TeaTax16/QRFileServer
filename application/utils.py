@@ -1,0 +1,24 @@
+import os
+import sys
+import socket
+
+def resource_path(relative_path):
+    """
+    Get absolute path to resource, works for dev and for PyInstaller.
+    """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath("")
+    return os.path.join(base_path, relative_path)
+
+def get_local_ip():
+    """
+    Retrieve the local network IP address.
+    """
+    hostname = socket.gethostname()
+    try:
+        return socket.gethostbyname(hostname)
+    except socket.gaierror:
+        return None
