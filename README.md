@@ -1,124 +1,133 @@
-# FileServer
-This project provides a simple and efficient file server that allows users to upload any file types and download them via QR codes. 
-The application offers a user-friendly web interface for managing files, making it easy to share and access files within a local network.
+# XARhub
 
+XARhub is a web-based application that provides a range of functionalities, including file uploading and downloading 
+via QR codes, remote room creation with host/client QR codes and placeholders for advanced features like webRTC 
+and image segmentation.
 
+It offers a user-friendly interface for managing files and collaborating with others in both local and remote networks.
+
+---
 
 ## Features
-- **Web Interface**: Users can upload any type of files and manage them through an intuitive web interface.
-- **QR Code Download**: Generate QR codes for each file, enabling easy downloads by scanning the QR code with a device connected to the same network.
-- **File Management**: View a list of all uploaded files and delete specific files as needed.
-- **Drag and Drop Upload**: Easily upload files by dragging and dropping them onto the designated area on the home page.
+- **Web Interface for files**: Easily uploaded, list and manage any file type through a user-friendly web interface.
+- **QR Code Downloads**: Generate QR codes for downloading files directly to devices connected in the same network.
+- **Remote Rooms**: Create collaborative virtual rooms that generate unique host and client QR codes to connect remote users.
+- **Place holders for Future Features**:
+  - **WebRTC**: Integration for streaming video between computer sna headsets (in development)
+  - **Segmentation**: Placeholder route for advanced medical image segmentation (in development)
+
+---
 
 ## Pre-Requisites
- This system was developed using the following OS and software versions. other configurations may work, however only the following have been tested.
- - **Operating System**: ```Windows 11```
- - **Python**: [```3.12```](https://www.python.org/downloads/)
+This system was developed and tested on the following environment. Other configurations may work but have not been tested:
+- **Operating System**: Windows 11
+- **Python**: 3.12
 
-### Install Required Python Packages
-```pip install flask qrcode[pil]```
-- **Flask**: Web framework used for the web interface
-- **qrcode**: Library for generating QR Codes
+### Python Dependencies
+`pip install flask qrcode[pil] reportlab Pillow pywebview`
+- **FLask**: Web framework for serving the application
+- **qrcode**: Generating QR codes
+- **reportlab**: Generating PDFs
+- **Pillow (PIL)**: Image processing library
+- **pywebview**: Native desktop window for the web app
 
-## Usage Instructions
-### 1. Configure File Storage Folder
+---
 
-#### Application variables (```app.py```)
-Edit the following variable in the script to specify your upload path.
-```python
-upload_folder = r'/directory/to/uploads'
-```
-```upload_folder``` = Path to the folder where the uploaded files will be stored.
-
-
-### 2. Project structure
-Project directory should be structured as follows:
+## Project Structure
+The project directory is structure as the following:
 ```
 project_folder/
-├── app.py
+├── run.py
+├── application/
+│   ├── __init__.py
+│   ├── config.py
+│   ├── utils.py
+│   ├── routes/
+│   │   ├── __init__.py
+│   │   ├── main.py
+│   │   ├── files.py
+│   │   ├── remote.py
+│   │   ├── qr.py
+│   │   ├── webrtc.py
+│   │   └── segmentation.py
 ├── templates/
 │   ├── home.html
-│   └── files.html
+│   ├── files.html
+│   ├── remote.html
+│   ├── remote_success.html
+│   ├── segmentation.html
+│   └── webrtc.html
 ├── static/
-│   ├── styles.css
-│   └── logo.png (optional)
-├── uploads/ (Automatically created if it doesn't exist)
+│   ├── css/
+│   │   ├── bootstrap.min.css
+│   │   └── styles.css
+│   ├── js/
+│   │   └── bootstrap.bundle.min.js
+│   └── media/
+│       ├── logo.png
+│       └── simxar.png
+├── uploads/ (created automatically)
+└── codes/ (created automatically)
 ```
-- ```app.py```: The main Flask application script.
-- ```templates/```: Directory containing HTML templates.
-- ```static/```: Directory containing static files like CSS and images.
-- ```uploads/```: Directory where the uploaded files are stored.
+### Key Files
+- `run.py`: The main entry point that starts the Flask server and opens the application in a desktop webview.
+- `application/`: Contains the Flask app factory, configuration, utilities and route blueprints.
+- `templates/`: HTML templates for rendering different pages.
+- `static/`: Static files (CSS, JS, media).
+- `uploads/`: Stores user uploaded files.
+- `codes/`: Stores generated PDF with QR codes for remote sessions.
 
+### Packaging as an Executable
 
-### 3. Running the Application
-#### Start the Flask Application
-- Open a terminal or command prompt.
-- Navigate to the directory containing ```app.py```.
-- Run the script:
+This application can be packaged into a single executable using PyInstaller.
 ```
-python app.py
+pyinstaller --name XARhub --onefile --windowed \
+--add-data "templates;templates" \
+--add-data "static;static" \
+--add-data "uploads;uploads" \
+--add-data "codes;codes" \
+--icon=static/media/logo.ico run.py
 ```
-The Flask app will start running on ```http://localhost:8080/```.
 
-### 4. Managing files
-#### **Access the Home Page**
-- Open a web browser and navigate to ```http://localhost:8080/```.
+--- 
 
-#### **Uploading Files via Web Interface**
-- **Drag and Drop**: Drag one or more files from your file explorer and drop them onto the designated dropzone area on the home page.
-- **Click to Select**: Click on the dropzone area to open the file dialog, then select one or more files to upload.
-- Files are uploaded automatically upon being dropped or selected, with feedback provided below the dropzone.
+## Using the Application
+### Starting the Application
+The application can be launched using the executable generated using the above command or by opening a terminal windows
+in the project directory and running:
 
-![{97A41196-7717-4013-940C-8634D76B79FD}](https://github.com/user-attachments/assets/ccf77c98-642e-46e5-b48c-fc130d2b4151)
+`python run.py`
 
-#### **Viewing and Managing Uploaded Files**
-- From the home page, click on the **View QR Codes** button.
-- Alternatively navigated directly to ```http://localhost:8080/files```
-- The files page displays a list of all uploaded files
-  - **File Name**:The name of the uploaded file.
-  - **Show QR**: Button to generate and display a QR code for downloading the file.
-  - **Delete**: Button to remove the specific file from the server.
-  
-![{E37D2AE6-7ECE-4049-930A-C57EC655442F}](https://github.com/user-attachments/assets/0e08baa9-69c7-4861-969c-a150d2e21c81)
+The application will:
+- Start a Flask server on the local port (default `8080`)
+- Automatically determine the local IP address
+- Open a desktop window using pywebview pointing to the application's home page
 
+The app can also be accessed directly in the browser by navigating to:
 
-#### **Generating QR Code for download**
-- Click the **Show QR** button next to a file to generate its QR code.
-- A modal will appear displaying the QR code.
-- Scan the code with a device connected to the same network to download the files.
+`http://<your_local_ip>:8080`
 
-#### **Deleting Files**
-- Click the **Delete** button next to a file to remove it from the server.
-- A confirmation dialog will appear next to prevent accidental deletions. 
+replacing `<your_local_ip>` with the IP of the local machine.
 
-#### **Back to the Main Menu**
-- From the files page, click the **Back to Main Menu** button to return to the home page.
+### Home Page
+![home.png](static/media/home.png)
+Once the application is launched, the Home Page will be presented where the user has the option to choose where they would like to go.
+- **File Loading**: Add, manage, download and generate QR codes for your files.
+- **Remote Rooms**: Create a remote session with QR codes for hosts and clients.
+- **WebRTC**: Placeholder page for future functionality.
+- **Segmentation**: Placeholder page for future functionality.
 
-![{6A1C19BD-0519-4031-91D8-960A66597992}](https://github.com/user-attachments/assets/d2085028-934a-4281-b9ac-ed67d8ea8d21)
+### File Loading
+![files.png](static/media/files.png)
+Drag and dop or click on the dotted box to upload files to the server.
+Uploaded files displays a list of files which can have a QR code generated or can be deleted.
 
+### Remote Rooms
+![remote.png](static/media/remote.png)
+Click on `+ New Client` to add a new client to invite. Names can be assigned to each of the clients.
 
+![remote_success.png](static/media/remote_success.png)
+Once ready, click `Generate QR Codes` which will open the landing page and PDFs create will be found in the `codes/` directory.
 
-### 5. Stopping the Scripts
-To stop the script and server, return to the  terminal window and press ```Ctrl+C```.
-
-
-## Scripts Overview
-### 1. ```app.py```
-This script is the main Flask application. Main functionalities include:
-- **File Upload**: Provides a web interface for users to upload any type of files.
-- **File Listing**: Displays all uploaded files on the files page.
-- **QR Code Generation**: Generates QR codes for each file, enabling easy downloads via scanning.
-- **File Deletion**: Allows users to delete specific files from the server.
-- **Flash Messaging**: Provides user feedback for actions like uploads and deletions.
-
-### 2. Templates and Static Files
-- **Templates:**
-  - ```home.html```: The template for the home page, which includes file upload and status display.
-  - ```files.html```: The template for the files page, which allows users to select and download files.
-- **Static Files:**
-  - ```styles.css```: Contains the CSS styles for the application.
-  - ```logo.png```: Optional logo image displayed on the home page.
-
-## Enhancements and Future Work
-- **Authentication**: Implement user authentication for the web interface to restrict access.
-- **PACS Server Integration**: Integrate the system with a PACS Server to securely retrieve medical images, ensuring compliance with medical regulations.
+### Other Pages
+**WebRTC** and **Segmentation** are placeholders which load static templates. 
