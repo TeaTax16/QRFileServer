@@ -14,6 +14,8 @@ from flask import (
     Blueprint, render_template, request, flash, redirect, url_for, current_app
 )
 from werkzeug.utils import secure_filename
+from flask_mail import Message
+from reportlab.lib.utils import ImageReader
 
 remote_bp = Blueprint('remote', __name__)
 
@@ -53,34 +55,23 @@ def remote_room():
         current_app.remote_rooms[code]['host_url'] = host_url
         host_qr = qrcode.make(host_url)
 
-        client_qrs = []
-        for client_name, client_email in clients:
-            # Hash the email
-            hashed_email = hashlib.sha256(client_email.lower().encode()).hexdigest()
-            client_code = f"{code}/c/{client_name}/{hashed_email}"
-            encoded_client = base64.urlsafe_b64encode(client_code.encode()).decode().rstrip('=')
-            client_url = f"simxar://{encoded_client}"
-            current_app.remote_rooms[code]['clients_url'].append(client_url)
-            client_qr = qrcode.make(client_url)
-            client_qrs.append((client_name, client_qr))
-
+        # Save host QR code PDF to disk
         host_pdf_path = os.path.join(current_app.config['CODES_FOLDER'], f"{code}_host_qr.pdf")
-        client_pdf_paths = []
-        logo_path = os.path.join(current_app.static_folder, 'media/simxar.png')
 
         def save_qr_as_pdf(qr_image, output_path, role_label, client_name=None):
             pdf_canvas = canvas.Canvas(output_path, pagesize=A4)
             qr_size = 17 * cm
             x_qr, y_qr = (A4[0] - qr_size) / 2, ((A4[1] - qr_size) / 2) - 1 * cm
 
-            # Draw logo
-            logo_width = 10 * cm
-            logo_height = 10 * cm
-            x_logo = (A4[0] - logo_width) / 2
-            y_logo = A4[1] - logo_height - 1 * cm
-            pdf_canvas.drawImage(logo_path, x_logo, y_logo, logo_width, logo_height, preserveAspectRatio=True)
+            logo_path = os.path.join(current_app.static_folder, 'media/simxar.png')
+            if os.path.exists(logo_path):
+                logo_width = 10 * cm
+                logo_height = 10 * cm
+                x_logo = (A4[0] - logo_width) / 2
+                y_logo = A4[1] - logo_height - 1 * cm
+                pdf_canvas.drawImage(logo_path, x_logo, y_logo, logo_width, logo_height, preserveAspectRatio=True)
 
-            # Save QR code as PNG
+            # Save QR code as PNG temporarily
             qr_temp_path = "temp_qr.png"
             qr_pil_image = qr_image.get_image().resize((int(qr_size), int(qr_size)))
             qr_pil_image.save(qr_temp_path)
@@ -97,21 +88,77 @@ def remote_room():
             pdf_canvas.showPage()
             pdf_canvas.save()
 
-        # Generate host PDF
+        # Generate and save the host PDF
         save_qr_as_pdf(host_qr, host_pdf_path, "Host")
 
-        # Generate client PDFs
-        for client_name, client_qr in client_qrs:
-            client_pdf_path = os.path.join(current_app.config['CODES_FOLDER'], f"{code}_client_{client_name}_qr.pdf")
-            save_qr_as_pdf(client_qr, client_pdf_path, "Client", client_name=client_name)
-            client_pdf_paths.append(client_pdf_path)
+        client_qrs = []
+        for client_name, client_email in clients:
+            # Hash the email
+            hashed_email = hashlib.sha256(client_email.lower().encode()).hexdigest()
+            client_code = f"{code}/c/{client_name}/{hashed_email}"
+            encoded_client = base64.urlsafe_b64encode(client_code.encode()).decode().rstrip('=')
+            client_url = f"simxar://{encoded_client}"
+            current_app.remote_rooms[code]['clients_url'].append(client_url)
+            client_qr = qrcode.make(client_url)
+            client_qrs.append((client_name, client_email, client_qr))
 
-        flash(f'Remote room "{code}" created successfully with {len(client_qrs)} client(s). QR codes have been generated and stored.', 'success')
+        # Generate client PDFs in memory and send via email
+        def generate_qr_pdf_in_memory(qr_image, role_label, client_name=None):
+            pdf_buffer = io.BytesIO()
+            pdf_canvas = canvas.Canvas(pdf_buffer, pagesize=A4)
+
+            qr_size = 17 * cm
+            x_qr, y_qr = (A4[0] - qr_size) / 2, ((A4[1] - qr_size) / 2) - 1 * cm
+
+            logo_path = os.path.join(current_app.static_folder, 'media/simxar.png')
+            if os.path.exists(logo_path):
+                logo_width = 10 * cm
+                logo_height = 10 * cm
+                x_logo = (A4[0] - logo_width) / 2
+                y_logo = A4[1] - logo_height - 1 * cm
+                pdf_canvas.drawImage(logo_path, x_logo, y_logo, logo_width, logo_height, preserveAspectRatio=True)
+
+            # Convert QR image to PNG in memory
+            qr_temp = io.BytesIO()
+            qr_pil_image = qr_image.get_image().resize((int(qr_size), int(qr_size)))
+            qr_pil_image.save(qr_temp, format='PNG')
+            qr_temp.seek(0)
+
+            # Use ImageReader for BytesIO
+            image_reader = ImageReader(qr_temp)
+            pdf_canvas.drawImage(image_reader, x_qr, y_qr, qr_size, qr_size)
+
+            pdf_canvas.setFont("Helvetica-Bold", 24)
+            label = f"{role_label}" if not client_name else f"{role_label} - {client_name}"
+            text_x = A4[0] / 2
+            text_y = y_qr - 2 * cm
+            pdf_canvas.drawCentredString(text_x, text_y, label)
+
+            pdf_canvas.showPage()
+            pdf_canvas.save()
+            pdf_buffer.seek(0)
+            return pdf_buffer
+
+        # Send each client their QR code via email
+        for client_name, client_email, client_qr in client_qrs:
+            client_pdf_buffer = generate_qr_pdf_in_memory(client_qr, "Client", client_name=client_name)
+
+            msg = Message(subject=f"Your Remote Room QR Code - {code}",
+                          recipients=[client_email])
+            msg.body = (
+                f"Hello {client_name},\n\n"
+                f"Attached is the QR code to join the remote room \"{code}\".\n"
+                "Simply scan it with the XARhub application.\n\n"
+                "Best,\n"
+                "XARhub Team"
+            )
+
+            # Attach the client's PDF
+            msg.attach(f"{code}_client_{client_name}_qr.pdf", "application/pdf", client_pdf_buffer.getvalue())
+            current_app.mail.send(msg)
+
+        flash(f'Remote room "{code}" created successfully with {len(client_qrs)} client(s). '
+              f'The host code PDF has been saved and the client QR codes have been emailed.', 'success')
         return render_template('remote_success.html', code=code)
 
     return render_template('remote.html')
-
-@remote_bp.route('/codes/<filename>', methods=['GET'])
-def get_code_file(filename):
-    filename = secure_filename(filename)
-    return current_app.send_static_file(os.path.join(current_app.config['CODES_FOLDER'], filename))
