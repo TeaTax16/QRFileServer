@@ -143,14 +143,12 @@ def remote_room():
         for client_name, client_email, client_qr in client_qrs:
             client_pdf_buffer = generate_qr_pdf_in_memory(client_qr, "Client", client_name=client_name)
 
-            msg = Message(subject=f"Your Remote Room QR Code - {code}",
+            msg = Message(subject=f" Remote Room Invitation - {code}",
                           recipients=[client_email])
             msg.body = (
                 f"Hello {client_name},\n\n"
-                f"Attached is the QR code to join the remote room \"{code}\".\n"
-                "Simply scan it with the XARhub application.\n\n"
-                "Best,\n"
-                "XARhub Team"
+                f"you have been invited to join room \"{code}\".\n"
+                "Print the attached pdf, place it in the middle of your environment and launch the simXAR app on your headset."
             )
 
             # Attach the client's PDF
