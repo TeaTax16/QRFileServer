@@ -7,4 +7,4 @@ FLASK_PORT = 8080
 
 # Email Server Configuration
 EMAIL_SERVER_URL = os.getenv('EMAIL_SERVER_URL', 'http://localhost:5001/send-email')
-EMAIL_SERVER_API_KEY = os.getenv('EMAIL_SERVER_API_KEY', 'your_default_api_key')  # Replace with your actual API key
+EMAIL_SERVER_API_KEY = os.getenv('EMAIL_SERVER_API_KEY', 'your_secure_api_key')  # Replace with your actual API key
