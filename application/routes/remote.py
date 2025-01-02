@@ -1,3 +1,5 @@
+# application/routes/remote.py
+
 import os
 import base64
 import random
@@ -14,8 +16,8 @@ from flask import (
     Blueprint, render_template, request, flash, redirect, url_for, current_app
 )
 from werkzeug.utils import secure_filename
-from flask_mail import Message
 from reportlab.lib.utils import ImageReader
+import requests  # Add requests for HTTP communication
 
 remote_bp = Blueprint('remote', __name__)
 
@@ -139,21 +141,42 @@ def remote_room():
             pdf_buffer.seek(0)
             return pdf_buffer
 
-        # Send each client their QR code via email
+        # Send each client their QR code via email using the email server
         for client_name, client_email, client_qr in client_qrs:
             client_pdf_buffer = generate_qr_pdf_in_memory(client_qr, "Client", client_name=client_name)
 
-            msg = Message(subject=f" Remote Room Invitation - {code}",
-                          recipients=[client_email])
-            msg.body = (
-                f"Hello {client_name},\n\n"
-                f"you have been invited to join room \"{code}\".\n"
-                "Print the attached pdf, place it in the middle of your environment and launch the simXAR app on your headset."
-            )
+            # Prepare email payload
+            email_payload = {
+                "recipient": client_email,
+                "subject": f"Remote Room Invitation - {code}",
+                "body": (
+                    f"Hello {client_name},\n\n"
+                    f"You have been invited to join room \"{code}\".\n"
+                    "Print the attached PDF, place it in the middle of your environment, and launch the simXAR app on your headset."
+                ),
+                "attachments": [
+                    {
+                        "filename": f"{code}_client_{client_name}_qr.pdf",
+                        "content": base64.b64encode(client_pdf_buffer.getvalue()).decode('utf-8')
+                    }
+                ]
+            }
 
-            # Attach the client's PDF
-            msg.attach(f"{code}_client_{client_name}_qr.pdf", "application/pdf", client_pdf_buffer.getvalue())
-            current_app.mail.send(msg)
+            # Send email via the email server
+            try:
+                response = requests.post(
+                    current_app.config['EMAIL_SERVER_URL'],
+                    json=email_payload,
+                    headers={
+                        'Authorization': f'Bearer {current_app.config["EMAIL_SERVER_API_KEY"]}'
+                    },
+                    timeout=10  # seconds
+                )
+                response_data = response.json()
+                if response.status_code != 200:
+                    flash(f"Failed to send email to {client_email}: {response_data.get('message', 'Unknown error')}", 'danger')
+            except requests.exceptions.RequestException as e:
+                flash(f"Error sending email to {client_email}: {str(e)}", 'danger')
 
         flash(f'Remote room "{code}" created successfully with {len(client_qrs)} client(s). '
               f'The host code PDF has been saved and the client QR codes have been emailed.', 'success')

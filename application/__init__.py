@@ -1,12 +1,13 @@
+# application/__init__.py
+
 import os
 import sys
+
 from flask import Flask
-from .config import SECRET_KEY, FLASK_PORT
-from .mail_config import (
-    MAIL_SERVER, MAIL_PORT, MAIL_USE_TLS, MAIL_USERNAME, MAIL_PASSWORD, MAIL_DEFAULT_SENDER
-)
+
+from .config import SECRET_KEY, FLASK_PORT, EMAIL_SERVER_URL, EMAIL_SERVER_API_KEY
 from .utils import resource_path
-from flask_mail import Mail
+
 
 def create_app():
     if getattr(sys, 'frozen', False):
@@ -35,14 +36,9 @@ def create_app():
     app.config['CODES_FOLDER'] = CODES_FOLDER
     app.config['FLASK_PORT'] = FLASK_PORT
 
-    app.config['MAIL_SERVER'] = MAIL_SERVER
-    app.config['MAIL_PORT'] = MAIL_PORT
-    app.config['MAIL_USE_TLS'] = MAIL_USE_TLS
-    app.config['MAIL_USERNAME'] = MAIL_USERNAME
-    app.config['MAIL_PASSWORD'] = MAIL_PASSWORD
-    app.config['MAIL_DEFAULT_SENDER'] = MAIL_DEFAULT_SENDER
-
-    mail = Mail(app)
+    # Email Server Configuration
+    app.config['EMAIL_SERVER_URL'] = EMAIL_SERVER_URL
+    app.config['EMAIL_SERVER_API_KEY'] = EMAIL_SERVER_API_KEY
 
     # In-memory storage for remote rooms
     app.remote_rooms = {}
@@ -61,8 +57,5 @@ def create_app():
     app.register_blueprint(segmentation_bp)
     app.register_blueprint(remote_bp)
     app.register_blueprint(qr_bp)
-
-    # Attach mail object to app so we can use it in views
-    app.mail = mail
 
     return app
