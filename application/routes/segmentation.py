@@ -1,3 +1,5 @@
+# application/routes/segmentation.py
+
 from flask import Blueprint, render_template
 
 segmentation_bp = Blueprint('segmentation', __name__)

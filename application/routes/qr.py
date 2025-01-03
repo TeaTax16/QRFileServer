@@ -1,10 +1,10 @@
+# application/routes/qr.py
+
 import os
-import io
 import base64
-import qrcode
 from flask import Blueprint, request, jsonify, current_app
 from werkzeug.utils import secure_filename
-from application.utils import get_local_ip
+from application.utils import generate_qr_code
 
 qr_bp = Blueprint('qr', __name__)
 
@@ -24,7 +24,7 @@ def qr_code():
         return "Error: Could not determine local IP address.", 500
 
     download_url = f"http://{local_ip}:{current_app.config['FLASK_PORT']}/download/{filename}"
-    img = qrcode.make(download_url)
+    img = generate_qr_code(download_url)
     buffer = io.BytesIO()
     img.save(buffer, format='PNG')
     buffer.seek(0)
