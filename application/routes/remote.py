@@ -1,5 +1,3 @@
-# application/routes/remote.py
-
 import os
 import base64
 import random
@@ -7,6 +5,7 @@ import string
 import re
 import hashlib
 import requests
+import json
 from flask import (
     Blueprint, render_template, request, flash, redirect, url_for, current_app
 )
@@ -65,6 +64,20 @@ def remote_room():
             'selected_files': valid_selected_files
         }
 
+        # Save selected_files to a JSON file
+        codes_folder = current_app.config['CODES_FOLDER']
+        room_data = {
+            'room_code': code,
+            'selected_files': valid_selected_files
+        }
+        json_path = os.path.join(codes_folder, f"{code}.json")
+        try:
+            with open(json_path, 'w') as json_file:
+                json.dump(room_data, json_file, indent=4)
+        except Exception as e:
+            flash(f"Error saving room data: {str(e)}", 'danger')
+            return redirect(url_for('remote.remote_room'))
+
         # Generate host URL and QR code
         host_code = f"{code}/h"
         encoded_host = base64.urlsafe_b64encode(host_code.encode()).decode().rstrip('=')
@@ -73,7 +86,6 @@ def remote_room():
         host_qr = generate_qr_code(host_url)
 
         # Paths and logo
-        codes_folder = current_app.config['CODES_FOLDER']
         logo_path = os.path.join(current_app.static_folder, 'media', 'simxar.png')
 
         # Save host QR code PDF to disk
