@@ -46,11 +46,23 @@ def remote_room():
                 flash(f'Invalid email format: {email}', 'warning')
                 return redirect(url_for('remote.remote_room'))
 
+        # Get selected files
+        selected_files = request.form.getlist('selected_files')
+        upload_folder = current_app.config['UPLOAD_FOLDER']
+        available_files = os.listdir(upload_folder)
+        # Validate selected files
+        valid_selected_files = [f for f in selected_files if f in available_files]
+
+        if not valid_selected_files:
+            flash('No valid files selected.', 'warning')
+            return redirect(url_for('remote.remote_room'))
+
         # Generate unique room code
         code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
         current_app.remote_rooms[code] = {
             'host_url': None,
-            'clients_url': []
+            'clients_url': [],
+            'selected_files': valid_selected_files
         }
 
         # Generate host URL and QR code
@@ -126,6 +138,10 @@ def remote_room():
             f'The host code PDF has been saved and the client QR codes have been emailed.',
             'success'
         )
-        return render_template('remote_success.html', code=code)
+        return render_template('remote_success.html', code=code, selected_files=valid_selected_files)
 
-    return render_template('remote.html')
+    else:
+        # GET request
+        upload_folder = current_app.config['UPLOAD_FOLDER']
+        all_files = os.listdir(upload_folder)
+        return render_template('remote.html', files=all_files)

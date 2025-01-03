@@ -2,9 +2,10 @@
 
 import os
 import base64
+import io
 from flask import Blueprint, request, jsonify, current_app
 from werkzeug.utils import secure_filename
-from application.utils import generate_qr_code
+from application.utils import generate_qr_code, get_local_ip
 
 qr_bp = Blueprint('qr', __name__)
 

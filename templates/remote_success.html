@@ -41,6 +41,13 @@
         {% endwith %}
     </div>
 
+    <!-- QR Codes Generated Message -->
+    <div class="card p-4 mb-4 text-center">
+        <h2 class="text-white">QR Codes Generated</h2>
+        <p class="text-white">The QR codes for the host and clients have been generated and stored in the <code>codes</code> folder on the server.</p>
+        <p class="text-white">You can access them directly from the server as needed.</p>
+    </div>
+
     <!-- Remote Room Code -->
     <div class="card p-4 mb-4 text-center">
         <h2>Your Remote Room Code</h2>
@@ -48,11 +55,39 @@
         <p class="mt-3 text-white">Use this code to share and collaborate remotely.</p>
     </div>
 
-    <!-- QR Codes Generated Message -->
-    <div class="card p-4 mb-4 text-center">
-        <h2 class="text-white">QR Codes Generated</h2>
-        <p class="text-white">The QR codes for the host and clients have been generated and stored in the <code>codes</code> folder on the server.</p>
-        <p class="text-white">You can access them directly from the server as needed.</p>
+    <!-- Selected Files Section -->
+    <div class="card p-4 mb-4">
+        <h2>Selected Models</h2>
+        {% if selected_files %}
+        <ul class="list-group">
+            {% for file in selected_files %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ file }}
+                <button type="button" class="btn btn-main btn-sm show-qr-btn" data-filename="{{ file }}">
+                    Show QR
+                </button>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No models were selected for this remote room.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- QR Code Modal -->
+<div class="modal fade" id="qrCodeModal" tabindex="-1" aria-labelledby="qrCodeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="qrCodeModalLabel" class="modal-title">QR Code</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="qrCodeImage" src="" alt="QR Code" class="img-fluid">
+                <p class="mt-3" id="qrCodeDescription">Scan this QR code to download the file.</p>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -61,7 +96,51 @@
 
 <!-- Custom JavaScript -->
 <script>
-    // Any additional JavaScript can be added here
+    document.addEventListener('DOMContentLoaded', function () {
+        // QR Code Modal Handling
+        const qrCodeModal = new bootstrap.Modal(document.getElementById('qrCodeModal'));
+        const qrCodeImage = document.getElementById('qrCodeImage');
+        const qrCodeDescription = document.getElementById('qrCodeDescription');
+
+        // Add event listeners to all Show QR buttons
+        document.querySelectorAll('.show-qr-btn').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const filename = this.getAttribute('data-filename');
+                if (!filename) {
+                    alert('Filename not found.');
+                    return;
+                }
+
+                // Fetch the QR code from the server
+                fetch(`/qr?filename=${encodeURIComponent(filename)}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.qr_code) {
+                            qrCodeImage.src = `data:image/png;base64,${data.qr_code}`;
+                            qrCodeDescription.textContent = `Downloading: ${filename}`;
+                            qrCodeModal.show();
+                        } else {
+                            alert('QR code generation failed.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching QR code:', error);
+                        alert('An error occurred while generating the QR code.');
+                    });
+            });
+        });
+
+        // Clear QR code image when modal is hidden
+        document.getElementById('qrCodeModal').addEventListener('hidden.bs.modal', function () {
+            qrCodeImage.src = '';
+            qrCodeDescription.textContent = 'Scan this QR code to download the file.';
+        });
+    });
 </script>
 </body>
 </html>
